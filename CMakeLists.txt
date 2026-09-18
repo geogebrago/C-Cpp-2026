@@ -4,7 +4,7 @@ project(ccpp2026)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(p01_running_letter level1/p01_running_letter/main.c)
+add_executable(p01_running_letter level1/p01_running_letter/main.cpp)
 
 add_executable(p02_is_prime  level1/p02_is_prime/main.c)
 

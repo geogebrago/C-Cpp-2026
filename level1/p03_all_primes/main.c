@@ -1,15 +1,14 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
-#define N 10000005
+#define N 1005
 
 bool vis[N];
 int pri[N];
 
 int main()
 {
-    int n, tot = 0;
-    scanf_s("%d", &n);
+    int n=1000, tot = 0;
     double start = clock();
     if (n < 2 || n >= N)
         return 0;

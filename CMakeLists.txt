@@ -20,7 +20,7 @@ add_executable(p06_push_boxes  level1/p06_push_boxes/main.c)
 
 add_executable(p07_linked_list level1/p07_linked_list/main.cpp)
 
-add_executable(p08_warehouse  level1/p08_warehouse/main.c)
+add_executable(p08_warehouse level1/p08_warehouse/main.cpp)
 
 add_executable(p09_safe_array_cpp  level1/p09_safe_array_cpp/main.cpp)
 

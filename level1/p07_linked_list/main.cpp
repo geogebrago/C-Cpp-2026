@@ -1,5 +1,6 @@
  #include<bits/stdc++.h>
 using namespace std;
+int id;
 struct nd
 {
     int v;
@@ -67,6 +68,7 @@ nd *fd(nd *hd,int w)
     nd *p=hd;
     while (p!=nullptr)
     {
+        ++id;
         if (p->v==5) return p;
         p=p->nt;
     }
@@ -79,7 +81,9 @@ int main()
     hd=rsv(hd);
     prt(hd);
     nd *fi=fd(hd,5);
-    nd *se=fd(fi,5);
+    fi==nullptr?puts("-1"):printf("%d\n",id);
+    nd *se=fd(fi->nt,5);
+    se==nullptr?puts("-1"):printf("%d\n",id);
     del(hd);
      return 0;
 }

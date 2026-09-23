@@ -1,32 +1,52 @@
-#include<bits/stdc++.h>
-#include<windows.h>
+#include <bits/stdc++.h>
+#include <windows.h>
 using namespace std;
-const int slp=50;
-const int gp=50;
-const int cl=5;
+
+const int slp = 50;
+const int gp = 50;
+const int cl = 5;
+
 int main()
 {
     string s;
-    int pos=0,dr=1,sz;
-    cin>>s;
-    sz=(int)s.size();
+    cin >> s;
+
+    int sz = (int)s.size();
+    int pos = 0;
+    int dr = 1;
+
+    const int left = 0;
+    const int right = gp - sz;
+
     while (true)
     {
         system("cls");
-        for (int i=0;i<pos;i++) putchar(' ');
-        cout<<s;
-        for (int i=0;i<gp-pos-sz;i++) putchar(' ');
+
+        for (int i = 0; i < pos; i++)
+            putchar(' ');
+
+        cout << s;
+
+        for (int i = 0; i < gp - pos - sz; i++)
+            putchar(' ');
+
         puts("|");
-        for (int i=1;i<=cl;++i)
+
+        for (int i = 1; i <= cl; ++i)
         {
-            for (int j=0;j<gp;++j) putchar(' ');
+            for (int j = 0; j < gp; ++j)
+                putchar(' ');
             puts("|");
         }
-        pos+=dr;
-        if (pos==gp-1) dr=-1;
-        if (pos==0) dr=1;
+
+        pos += dr;
+
+        if (pos >= right)
+            dr = -1;
+
+        if (pos <= left)
+            dr = 1;
+
         Sleep(slp);
     }
-    return 0;
-}//这份代码非常优秀,充分考虑题目条件， 请给我满分(doge)
-//请打开 运行 编辑配置 在输出台中模拟终端 TKS
+}

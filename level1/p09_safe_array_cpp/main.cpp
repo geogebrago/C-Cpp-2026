@@ -1,60 +1,59 @@
-#include <iostream>
+#include<bits/stdc++.h>
 using namespace std;
 
-class SafeArray
+template<typename T>
+class dnager_array
 {
 private:
-    int *data;
-    int size;
+    T *a;
+    int n;
 
 public:
-    SafeArray(int n)
+    dnager_array(int sz)
     {
-        size = n;
-        data = new int[size];
-    }
-
-    ~SafeArray()
-    {
-        delete[] data;
-    }
-
-    void set(int index, int value)
-    {
-        if (index < 0 || index >= size)
+        if (sz<=0)
         {
-            cout << "数组下标越界！" << endl;
+            n=0;
+            a=nullptr;
             return;
         }
 
-        data[index] = value;
+        n=sz;
+        a=new T[n];
     }
 
-    int get(int index)
+    ~dnager_array()
     {
-        if (index < 0 || index >= size)
+        delete[] a;
+    }
+
+    T &operator[](int i)
+    {
+        if (i<0||i>=n)
         {
-            cout << "数组下标越界！" << endl;
-            return 0;
+            printf("下标越界\n");
+            exit(1);
         }
 
-        return data[index];
+        return a[i];
     }
 };
 
 int main()
 {
-    SafeArray a(5);
+    dnager_array<int> a(3);
 
-    a.set(0, 10);
-    a.set(1, 20);
-    a.set(4, 50);
+    a[0]=114514;
+    a[1]=1919810;
 
-    cout << a.get(0) << endl;
-    cout << a.get(4) << endl;
+    printf("%d %d\n",a[0],a[1]);
 
-    a.set(5, 100);   // 越界
-    cout << a.get(5) << endl;  // 越界
+    dnager_array<bool> b(3);
+
+    b[0]=true;
+    b[1]=false;
+
+    cout<<b[0]<<" "<<b[1]<<endl;
 
     return 0;
 }

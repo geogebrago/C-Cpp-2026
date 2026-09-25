@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include <conio.h>
+#include <Windows.h>
 using namespace std;
 
 const int N = 1001;
@@ -24,7 +25,7 @@ struct nd
 vector<nd> s;
 
 // 判断坐标是否在迷宫范围内
-bool IN(int x, int y)
+bool I_N(int x, int y)
 {
     return x >= 1 && x <= n &&
            y >= 1 && y <= m;
@@ -41,7 +42,7 @@ void F_B()
         int nx = bx + 2 * dx[i];
         int ny = by + 2 * dy[i];
 
-        if (IN(nx, ny) && !vis[nx][ny])
+        if (I_N(nx, ny) && !vis[nx][ny])
         {
             s.push_back({tx, ty, i});
         }
@@ -60,7 +61,7 @@ void O_P()
             else if (i == ax && j == ay)
                 putchar('@');
             else if (!vis[i][j])
-                putchar('#');
+                printf("#");
             else
                 putchar(' ');
         }
@@ -76,13 +77,13 @@ void GT()
     int d = -1;
 
     if (ch == 'w' || ch == 'W')
-        d = 1;
-    else if (ch == 's' || ch == 'S')
         d = 2;
+    else if (ch == 's' || ch == 'S')
+        d = 1;
     else if (ch == 'a' || ch == 'A')
-        d = 3;
-    else if (ch == 'd' || ch == 'D')
         d = 4;
+    else if (ch == 'd' || ch == 'D')
+        d = 3;
 
     // 如果输入的是 WASD
     if (d != -1)
@@ -91,7 +92,7 @@ void GT()
         int ny = ay + dy[d];
 
         // 先判断边界，再访问数组
-        if (IN(nx, ny) && vis[nx][ny])
+        if (I_N(nx, ny) && vis[nx][ny])
         {
             ax = nx;
             ay = ny;
@@ -109,6 +110,9 @@ void GT()
 
 int main()
 {
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+
     scanf("%d %d", &n, &m);
 
     // 防止迷宫尺寸非法以及数组越界
@@ -140,7 +144,7 @@ int main()
         int nx = x + dx[d];
         int ny = y + dy[d];
 
-        if (IN(nx, ny) && !vis[nx][ny])
+        if (I_N(nx, ny) && !vis[nx][ny])
         {
             vis[x][y] = 1;
             vis[nx][ny] = 1;

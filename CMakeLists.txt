@@ -16,7 +16,7 @@ add_executable(p04_hanoi  level1/p04_hanoi/main.c)
 add_executable(p05_maze level1/p05_maze/main.cpp
 )
 
-add_executable(p06_push_boxes  level1/p06_push_boxes/main.c)
+add_executable(p06_push_boxes level1/p06_push_boxes/main.cpp)
 
 add_executable(p07_linked_list level1/p07_linked_list/main.cpp)
 

@@ -59,7 +59,6 @@ nd *rsv(nd *hd)
     while (cur != nullptr)
     {
         nd *nt = cur->nt;
-
         cur->nt = pre;
         pre = cur;
         cur = nt;

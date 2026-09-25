@@ -1,198 +1,293 @@
-#include <bits/stdc++.h>
-#include<Windows.h>
-using namespace std;
+#include <stdio.h>
+#include <string.h>
+#include <windows.h>
+#include <limits.h>
 
-struct Goods
+const int N=105,M=1005;
+
+int x,tot;
+double y;
+char r[N];
+
+struct nd
 {
-    string id;      // 货物型号
-    int quantity;   // 数量
-};
+    char id[N];
+    int num;
+    double w;
+}s[N];
 
-vector<Goods> goods;
-
-// 显示库存
-void show()
+void clear_input()
 {
-    cout << "\n===== 存货列表 =====\n";
+    while (getchar()!='\n');
+}
 
-    if (goods.empty())
+void load()
+{
+    FILE *fp=fopen(
+        "C:/Users/26346/CLionProjects/C-Cpp-2026/level1/p08_warehouse/goods.txt",
+        "r"
+    );
+
+    if (fp==NULL)
     {
-        cout << "当前没有库存\n";
+        printf("文件打开失败！\n");
         return;
     }
 
-    cout << left << setw(15) << "型号"
-         << setw(10) << "数量" << '\n';
-
-    for (const auto &g : goods)
+    while (tot<N-1&&fscanf(fp,"%104s %lf %d",r+1,&y,&x)==3)
     {
-        cout << left << setw(15) << g.id
-             << setw(10) << g.quantity << '\n';
+        if (y<=0||x<0)
+            continue;
+
+        ++tot;
+        strcpy(s[tot].id+1,r+1);
+        s[tot].num=x;
+        s[tot].w=y;
     }
+
+    fclose(fp);
 }
 
-// 查找货物
-int findGoods(const string &id)
+int fd(char *tp)
 {
-    for (int i = 0; i < (int)goods.size(); ++i)
-    {
-        if (goods[i].id == id)
+    for (int i=1;i<=tot;i++)
+        if (strcmp(tp,s[i].id+1)==0)
             return i;
-    }
 
     return -1;
 }
 
-// 入库
-void in()
+void e_nd()
 {
-    string id;
-    int quantity;
+    for (int i=1;i<=tot;i++)
+        printf("%-15s %-15.2f %-15d\n",
+               s[i].id+1,s[i].w,s[i].num);
+}
 
-    cout << "请输入货物型号：";
-    cin >> id;
+void show()
+{
+    printf("\n=========存货列表·===========\n");
 
-    cout << "请输入入库数量：";
-    cin >> quantity;
-
-    if (quantity <= 0)
+    if (tot==0)
     {
-        cout << "数量必须大于 0\n";
+        printf("当前没有商品\n");
         return;
     }
 
-    int pos = findGoods(id);
+    printf("%-15s %-15s %-15s\n","型号","单价","数量");
+    printf("---------------------------------------------\n");
 
-    if (pos == -1)
+    e_nd();
+}
+
+void i_n()
+{
+    printf("\n========== 入库 ==========\n");
+
+    if (tot>=N-1)
     {
-        // 新货物
-        goods.push_back({id, quantity});
+        printf("商品种类已达到上限！\n");
+        return;
+    }
+
+    printf("请输入商品型号：");
+
+    if (scanf("%104s",r+1)!=1)
+    {
+        printf("输入错误！\n");
+        clear_input();
+        return;
+    }
+
+    int pos=fd(r+1);
+
+    if (pos==-1)
+    {
+        ++tot;
+        strcpy(s[tot].id+1,r+1);
+
+        while (1)
+        {
+            printf("请输入商品数量：\n");
+
+            if (scanf("%d",&s[tot].num)!=1)
+            {
+                printf("请输入整数！\n");
+                clear_input();
+                continue;
+            }
+
+            if (s[tot].num>0)
+                break;
+
+            printf("商品数量必须大于0！\n");
+        }
+
+        while (1)
+        {
+            printf("请输入商品价格：\n");
+
+            if (scanf("%lf",&s[tot].w)!=1)
+            {
+                printf("请输入数字！\n");
+                clear_input();
+                continue;
+            }
+
+            if (s[tot].w>0)
+                break;
+
+            printf("商品价格必须大于0！\n");
+        }
     }
     else
     {
-        // 已经存在，直接增加数量
-        goods[pos].quantity += quantity;
+        printf("当前库存：%d\n",s[pos].num);
+
+        while (1)
+        {
+            printf("请输入商品入库数量：\n");
+
+            if (scanf("%d",&x)!=1)
+            {
+                printf("请输入整数！\n");
+                clear_input();
+                continue;
+            }
+
+            if (x>0)
+                break;
+
+            printf("入库数量必须大于0！\n");
+        }
+
+        if (s[pos].num>INT_MAX-x)
+        {
+            printf("库存数量过大！\n");
+            return;
+        }
+
+        s[pos].num+=x;
     }
 
-    cout << "入库成功\n";
+    printf("已入库\n");
 }
 
-// 出库
-void out()
+void o_t()
 {
-    string id;
-    int quantity;
+    printf("\n========== 出库 ==========\n");
 
-    cout << "请输入货物型号：";
-    cin >> id;
+    int pos=-1;
 
-    int pos = findGoods(id);
-
-    if (pos == -1)
+    while (1)
     {
-        cout << "没有找到该货物\n";
-        return;
+        printf("请输入商品型号：");
+
+        if (scanf("%104s",r+1)!=1)
+        {
+            printf("输入错误！\n");
+            clear_input();
+            continue;
+        }
+
+        pos=fd(r+1);
+
+        if (pos!=-1)
+            break;
+
+        printf("不存在该商品！\n");
     }
 
-    cout << "当前库存：" << goods[pos].quantity << '\n';
+    printf("当前库存：%d\n",s[pos].num);
 
-    cout << "请输入出库数量：";
-    cin >> quantity;
-
-    if (quantity <= 0)
+    while (1)
     {
-        cout << "数量必须大于 0\n";
-        return;
+        printf("请输入商品出库数量：\n");
+
+        if (scanf("%d",&x)!=1)
+        {
+            printf("请输入整数！\n");
+            clear_input();
+            continue;
+        }
+
+        if (0<x&&x<=s[pos].num)
+            break;
+
+        printf("出库数量必须大于0且不能超过当前库存！\n");
     }
 
-    if (quantity > goods[pos].quantity)
-    {
-        cout << "库存不足\n";
-        return;
-    }
+    s[pos].num-=x;
 
-    goods[pos].quantity -= quantity;
-
-    cout << "出库成功\n";
+    printf("已出库\n");
 }
 
-// 从文件读取库存
-void load()
-{
-    ifstream fin("warehouse.txt");
-
-    if (!fin)
-    {
-        // 文件不存在，说明可能是第一次运行
-        return;
-    }
-
-    Goods g;
-
-    while (fin >> g.id >> g.quantity)
-    {
-        goods.push_back(g);
-    }
-
-    fin.close();
-}
-
-// 保存库存到文件
 void save()
 {
-    ofstream fout("warehouse.txt");
+    FILE *fp=fopen(
+        "C:/Users/26346/CLionProjects/C-Cpp-2026/level1/p08_warehouse/goods.txt",
+        "w"
+    );
 
-    for (const auto &g : goods)
+    if (fp==NULL)
     {
-        fout << g.id << ' '
-             << g.quantity << '\n';
+        printf("文件打开失败，数据保存失败！\n");
+        return;
     }
 
-    fout.close();
+    for (int i=1;i<=tot;i++)
+        fprintf(fp,"%s %.2f %d\n",
+                s[i].id+1,s[i].w,s[i].num);
+
+    fclose(fp);
 }
 
 int main()
 {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
-    // 程序启动时读取库存
-    load();
-    while (true)
-    {
-        cout << "\n====================\n";
-        cout << "     简单进销存\n";
-        cout << "====================\n";
-        cout << "1. 显示存货列表\n";
-        cout << "2. 入库\n";
-        cout << "3. 出库\n";
-        cout << "4. 退出程序\n";
-        cout << "请选择：";
 
-        int choice;
-        cin >> choice;
-        system("cls");
-        if (choice == 1)
+    load();
+
+    while (1)
+    {
+        printf("\n====================\n");
+        printf("     简单进销存\n");
+        printf("====================\n");
+        printf("1. 显示存货列表\n");
+        printf("2. 入库\n");
+        printf("3. 出库\n");
+        printf("4. 退出程序\n");
+        printf("请选择：\n");
+
+        if (scanf("%d",&x)!=1)
+        {
+            printf("请输入1~4的数字！\n");
+            clear_input();
+            continue;
+        }
+
+        if (x==1)
         {
             show();
         }
-        else if (choice == 2)
+        else if (x==2)
         {
-            in();
+            i_n();
         }
-        else if (choice == 3)
+        else if (x==3)
         {
-            out();
+            o_t();
         }
-        else if (choice == 4)
+        else if (x==4)
         {
-            // 退出前保存库存
             save();
-            cout << "库存已保存，程序退出\n";
-            break;
+            printf("程序已退出！\n");
+            return 0;
         }
         else
         {
-            cout << "输入错误，请重新选择\n";
+            printf("请输入1~4！\n");
         }
     }
 

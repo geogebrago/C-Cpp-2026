@@ -6,9 +6,9 @@ using namespace std;
 const int N = 1001;
 
 int n, m;
-int bx, by;  // 迷宫生成当前位置
-int ex, ey;  // 终点
-int ax, ay;  // 玩家位置
+int bx, by;
+int ex, ey;
+int ax, ay;   
 
 int dx[5] = {0, 1, -1, 0, 0};
 int dy[5] = {0, 0, 0, 1, -1};
@@ -24,14 +24,12 @@ struct nd
 
 vector<nd> s;
 
-// 判断坐标是否在迷宫范围内
 bool I_N(int x, int y)
 {
     return x >= 1 && x <= n &&
            y >= 1 && y <= m;
 }
 
-// 将当前位置周围可以继续扩展的位置加入候选边
 void F_B()
 {
     for (int i = 1; i <= 4; ++i)
@@ -49,7 +47,6 @@ void F_B()
     }
 }
 
-// 输出迷宫
 void O_P()
 {
     for (int i = 1; i <= n; ++i)
@@ -69,7 +66,6 @@ void O_P()
     }
 }
 
-// 获取玩家输入并移动
 void GT()
 {
     char ch = _getch();
@@ -85,13 +81,11 @@ void GT()
     else if (ch == 'd' || ch == 'D')
         d = 3;
 
-    // 如果输入的是 WASD
     if (d != -1)
     {
         int nx = ax + dx[d];
         int ny = ay + dy[d];
 
-        // 先判断边界，再访问数组
         if (I_N(nx, ny) && vis[nx][ny])
         {
             ax = nx;
@@ -115,15 +109,12 @@ int main()
 
     scanf("%d %d", &n, &m);
 
-    // 防止迷宫尺寸非法以及数组越界
     if (n <= 3 || m <= 3 || n >= N || m >= N)
         return 0;
 
-    // 随机选择起点
     bx = rd() % n + 1;
     by = rd() % m + 1;
 
-    // 玩家初始位置和迷宫生成起点相同
     ax = bx;
     ay = by;
 
@@ -131,7 +122,6 @@ int main()
 
     F_B();
 
-    // 随机 Prim 生成迷宫
     while (!s.empty())
     {
         int sz = s.size();
@@ -159,7 +149,6 @@ int main()
         s.pop_back();
     }
 
-    // 找距离玩家最远的可走位置作为终点
     int md = -1;
     ex = ax;
     ey = ay;

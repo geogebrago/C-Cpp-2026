@@ -34,7 +34,6 @@ nd *crt()
             tl = p;
         }
     }
-
     return hd;
 }
 
@@ -113,7 +112,6 @@ int main()
     int id2=id1+1;
     nd *se = nullptr;
 
-    // 只有 fi 不为空时，才能访问 fi->nt
     if (fi != nullptr)
         se = fd(fi->nt, 5, id2);
 

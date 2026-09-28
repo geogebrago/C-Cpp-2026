@@ -83,14 +83,14 @@ bool LD(const char *file)
         while(len>0&&(r[len-1]=='\n'||r[len-1]=='\r'))
             r[--len]='\0';
 
-        if(n==0&&len>=3&&
+        /*if(n==0&&len>=3&&
            (unsigned char)r[0]==0xEF&&
            (unsigned char)r[1]==0xBB&&
            (unsigned char)r[2]==0xBF)
         {
             memmove(r,r+3,len-2);
             len-=3;
-        }
+        }*/
 
         if(len==0)
             continue;

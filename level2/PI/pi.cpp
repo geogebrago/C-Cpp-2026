@@ -8,7 +8,7 @@ int memory_clock()
     PROCESS_MEMORY_COUNTERS pmc;
     if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
     {
-        return pmc.WorkingSetSize / 1024;
+        return pmc.PeakWorkingSetSize / 1024;
     }
     return -1;
 }
@@ -25,7 +25,7 @@ struct nd
             x/=B;
         }
     }
-    nd operator+(const nd &b) const
+    nd operator+(nd &b) const
     {
         nd c(0);
         c.n=max(n,b.n);
@@ -117,7 +117,14 @@ int main()
     nd pi=a-b;
     for (int i=pi.n;i>=1;i--)
     {
-        if (i==pi.n) printf("%d",pi.a[i]);
+        if (i==pi.n)
+        {
+           string x=to_string(pi.a[i]);
+            cout<<x[0]<<".";
+            x.erase(x.begin());
+            for (auto s:x)
+                putchar(s);
+        }
         else printf("%09d",pi.a[i]);
     }
     printf("\n时间: %.6lf\n",(double)clock()/CLOCKS_PER_SEC);

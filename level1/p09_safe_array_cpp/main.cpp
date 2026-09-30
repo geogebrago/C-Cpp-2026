@@ -26,7 +26,7 @@ public:
     {
         delete[] a;
     }
-
+    dnager_array &operator=(dnager_array &)=delete;
     T &operator[](int i)
     {
         if (i<0||i>=n)

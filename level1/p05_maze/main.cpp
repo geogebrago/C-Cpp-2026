@@ -68,7 +68,7 @@ void O_P()
 
 void GT()
 {
-    char ch = _getch();
+    int ch = _getch();
 
     int d = -1;
 
@@ -80,7 +80,18 @@ void GT()
         d = 4;
     else if (ch == 'd' || ch == 'D')
         d = 3;
-
+    else if (ch==224)
+    {
+        ch=_getch();
+        if (ch==72)
+            d=2;
+        else if (ch==80)
+            d=1;
+        else if (ch==75)
+            d=4;
+        else if (ch==77)
+            d=3;
+    }
     if (d != -1)
     {
         int nx = ax + dx[d];

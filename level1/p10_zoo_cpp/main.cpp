@@ -2,6 +2,9 @@
 #include<Windows.h>
 using namespace std;
 
+const int MIN_DB=37;
+const int MAX_DB=32767;
+
 class Animal
 {
     string name;
@@ -9,11 +12,11 @@ class Animal
     int db;
 
 public:
-    Animal(string n, string v, int d)
+    Animal(string n,string v,int d)
     {
-        name = n;
-        voice = v;
-        db = d;
+        name=n;
+        voice=v;
+        db=d;
     }
 
     string getName()
@@ -23,8 +26,8 @@ public:
 
     void speak()
     {
-        cout << name << " : " << voice << "\n";
-        Beep(db, 500);
+        cout<<name<<" : "<<voice<<"\n";
+        Beep(db,500);
     }
 };
 
@@ -35,9 +38,15 @@ class Zoo
 public:
     void add(Animal* s)
     {
-        for (auto x : animals)
+        if(s==nullptr)
         {
-            if (x->getName() == s->getName())
+            printf("动物无效，无法添加\n");
+            return;
+        }
+
+        for(auto x:animals)
+        {
+            if(x->getName()==s->getName())
             {
                 printf("动物已存在，无法添加\n");
                 delete s;
@@ -51,9 +60,9 @@ public:
 
     void remove(string name)
     {
-        for (auto it = animals.begin(); it != animals.end(); ++it)
+        for(auto it=animals.begin();it!=animals.end();++it)
         {
-            if ((*it)->getName() == name)
+            if((*it)->getName()==name)
             {
                 delete *it;
                 animals.erase(it);
@@ -67,13 +76,13 @@ public:
 
     void speak()
     {
-        if (animals.empty())
+        if(animals.empty())
         {
             printf("动物园里没有动物\n");
             return;
         }
 
-        for (auto x : animals)
+        for(auto x:animals)
         {
             x->speak();
         }
@@ -81,12 +90,24 @@ public:
 
     ~Zoo()
     {
-        for (auto x : animals)
+        for(auto x:animals)
         {
             delete x;
         }
     }
 };
+
+bool inputInt(int &x)
+{
+    if(scanf("%d",&x)!=1)
+    {
+        int c;
+        while((c=getchar())!='\n'&&c!=EOF);
+        return false;
+    }
+
+    return true;
+}
 
 int main()
 {
@@ -95,11 +116,12 @@ int main()
 
     Zoo zoo;
 
-    zoo.add(new Animal("Cat", "MiaoMiao", 114));
-    zoo.add(new Animal("Dog", "WangWang", 514));
-    zoo.add(new Animal("Cow", "MooMoo", 1919));
-    zoo.add(new Animal("Sheep", "BaaBaa", 810));
-    while (1)
+    zoo.add(new Animal("Cat","MiaoMiao",114));
+    zoo.add(new Animal("Dog","WangWang",514));
+    zoo.add(new Animal("Bird","JiJi",1000));
+    zoo.add(new Animal("WolfDog","Aoooooo",400));
+
+    while(1)
     {
         printf("\n");
         printf("====================\n");
@@ -112,59 +134,81 @@ int main()
         printf("请输入选项: ");
 
         int choice;
-        scanf("%d", &choice);
 
-        switch (choice)
+        if(!inputInt(choice))
         {
-            case 1:
+            printf("输入无效，请输入 1 ~ 4\n");
+            continue;
+        }
+
+        switch(choice)
+        {
+        case 1:
             {
-                string name, voice;
+                string name,voice;
                 int db;
 
                 printf("请输入动物名称: ");
-                cin >> name;
+                cin>>name;
 
-                printf("请输入动物叫声: ");
-                cin >> voice;
-
-                printf("请输入动物叫声频率: ");
-                scanf("%d", &db);
-
-                if (db < 37 || db > 32767)
+                if(name.empty())
                 {
-                    printf("频率范围应为 37 ~ 32767\n");
+                    printf("动物名称不能为空\n");
                     break;
                 }
 
-                zoo.add(new Animal(name, voice, db));
+                printf("请输入动物叫声: ");
+                cin>>voice;
+
+                if(voice.empty())
+                {
+                    printf("动物叫声不能为空\n");
+                    break;
+                }
+
+                printf("请输入动物叫声频率: ");
+
+                if(!inputInt(db))
+                {
+                    printf("频率输入无效\n");
+                    break;
+                }
+
+                if(db<MIN_DB||db>MAX_DB)
+                {
+                    printf("频率范围应为 %d ~ %d\n",MIN_DB,MAX_DB);
+                    break;
+                }
+
+                zoo.add(new Animal(name,voice,db));
                 break;
             }
 
-            case 2:
+        case 2:
             {
                 string name;
 
                 printf("请输入动物名称: ");
-                cin >> name;
+                cin>>name;
 
                 zoo.remove(name);
                 break;
             }
 
-            case 3:
+        case 3:
             {
                 printf("动物叫叫叫\n");
                 zoo.speak();
                 break;
             }
 
-            case 4:
+        case 4:
             {
                 printf("退出\n");
                 return 0;
             }
 
-            default:
+        default:
             {
                 printf("无效的选择，请输入 1 ~ 4\n");
                 break;

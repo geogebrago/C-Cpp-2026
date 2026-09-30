@@ -21,10 +21,15 @@ add_executable(p06_push_boxes level1/p06_push_boxes/main.cpp
         level1/p06_push_boxes/wu.cpp
         level1/p06_push_boxes/liu.cpp
         level1/p06_push_boxes/qi.cpp)
+configure_file(level1/p06_push_boxes/yi.txt ${CMAKE_CURRENT_BINARY_DIR}/yi.txt COPYONLY)
+configure_file(level1/p06_push_boxes/er.txt ${CMAKE_CURRENT_BINARY_DIR}/er.txt COPYONLY)
+configure_file(level1/p06_push_boxes/san.txt ${CMAKE_CURRENT_BINARY_DIR}/san.txt COPYONLY)
+configure_file(level1/p06_push_boxes/score.txt ${CMAKE_CURRENT_BINARY_DIR}/score.txt COPYONLY)
 
 add_executable(p07_linked_list level1/p07_linked_list/main.cpp)
 
 add_executable(p08_warehouse level1/p08_warehouse/main.cpp)
+configure_file(level1/p08_warehouse/goods.txt ${CMAKE_CURRENT_BINARY_DIR}/goods.txt COPYONLY)
 
 add_executable(p09_safe_array_cpp  level1/p09_safe_array_cpp/main.cpp)
 
@@ -33,3 +38,4 @@ add_executable(p10_zoo_cpp  level1/p10_zoo_cpp/main.cpp)
 add_compile_options("-utf-8")
 
 add_link_options("-utf-8")
+add_executable(new_target level2/SkipList/tb.cpp)

@@ -16,6 +16,22 @@ struct nd
     double w;
 }s[N];
 
+void get_path(char *path, const char *name)
+{
+    DWORD length=GetModuleFileNameA(NULL,path,MAX_PATH);
+    if (length==0||length>=MAX_PATH)
+    {
+        path[0]='\0';
+        return;
+    }
+
+    char *p=strrchr(path,'\\');
+    if (p!=NULL)
+        *(p+1)='\0';
+
+    strcat_s(path,MAX_PATH,name);
+}
+
 void clear_input()
 {
     while (getchar()!='\n');
@@ -23,10 +39,9 @@ void clear_input()
 
 void load()
 {
-    FILE *fp=fopen(
-        "C:/Users/26346/CLionProjects/C-Cpp-2026/level1/p08_warehouse/goods.txt",
-        "r"
-    );
+    char file[MAX_PATH];
+    get_path(file,"goods.txt");
+    FILE *fp=fopen(file,"r");
 
     if (fp==NULL)
     {
@@ -224,10 +239,9 @@ void o_t()
 
 void save()
 {
-    FILE *fp=fopen(
-        "C:/Users/26346/CLionProjects/C-Cpp-2026/level1/p08_warehouse/goods.txt",
-        "w"
-    );
+    char file[MAX_PATH];
+    get_path(file,"goods.txt");
+    FILE *fp=fopen(file,"w");
 
     if (fp==NULL)
     {

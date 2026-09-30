@@ -3,12 +3,21 @@
 #include<conio.h>
 using namespace std;
 
-const int N=105;
+const int N=1005;
 int x,y,tot,nb,nc,ax,ay,now,lev;
 int n,m,bx[N],by[N],cx[N],cy[N],sc[4];
 int dx[5]={0,1,-1,0,0},dy[5]={0,0,0,1,-1};
 char s[N][N];
+void get_path(char *path, const char *name)
+{
+    GetModuleFileNameA(NULL, path,  260);
 
+    char *p = strrchr(path, '\\');
+    if (p != NULL)
+        *(p + 1) = '\0';
+
+    strcat(path, name);
+}
 bool I_N(int x,int y)
 {
     return x>=1&&x<=n&&y>=1&&y<=m;
@@ -182,7 +191,7 @@ void pm()
         puts("");
     }
 
-    cout<<"\nWASD移动  R重开  Q返回\n";
+    cout<<"\nWASD上下左右移动  R重开  Q返回\n";
 }
 
 bool WIN()
@@ -198,7 +207,7 @@ bool WIN()
 
 int GT()
 {
-    char ch=_getch();
+    int ch=_getch();
 
     if(ch=='q'||ch=='Q')
         return 0;
@@ -216,7 +225,18 @@ int GT()
         d=4;
     else if(ch=='d'||ch=='D')
         d=3;
-
+    else if(ch==224)
+    {
+        ch=_getch();
+        if(ch==72)
+            d=2;
+        else if(ch==80)
+            d=1;
+        else if(ch==75)
+            d=4;
+        else if(ch==77)
+            d=3;
+    }
     if(d==-1)
         return 1;
 
@@ -251,11 +271,9 @@ void SV()
 {
     if(sc[lev]==0||now<sc[lev])
         sc[lev]=now;
-
-    FILE *fp=fopen(
-        "C:\\Users\\26346\\CLionProjects\\C-Cpp-2026\\level1\\p06_push_boxes\\score.txt",
-        "w"
-    );
+    char file[N];
+    get_path(file, "score.txt");
+    FILE *fp=fopen(file,"w");
 
     if(fp==NULL)
         return;
@@ -269,23 +287,18 @@ void SV()
 void GL()
 {
     char file[N];
-
     if(lev==1)
     {
-        strcpy(file,
-            "C:\\Users\\26346\\CLionProjects\\C-Cpp-2026\\level1\\p06_push_boxes\\yi.txt");
+        get_path(file, "yi.txt");
     }
     else if(lev==2)
     {
-        strcpy(file,
-            "C:\\Users\\26346\\CLionProjects\\C-Cpp-2026\\level1\\p06_push_boxes\\er.txt");
+        get_path(file, "er.txt");
     }
     else
     {
-        strcpy(file,
-            "C:\\Users\\26346\\CLionProjects\\C-Cpp-2026\\level1\\p06_push_boxes\\san.txt");
+        get_path(file, "san.txt");
     }
-
     if(!LD(file))
     {
         _getch();
@@ -325,8 +338,10 @@ void G1()
 
 void LS()
 {
+    char file[N];
+    get_path(file, "score.txt");
     FILE *fp=fopen(
-        "C:\\Users\\26346\\CLionProjects\\C-Cpp-2026\\level1\\p06_push_boxes\\score.txt",
+        file,
         "r"
     );
 

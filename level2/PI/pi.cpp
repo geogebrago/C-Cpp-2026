@@ -2,7 +2,7 @@
 #include <windows.h>
 #include <psapi.h>
 using namespace std;
-const int B=1e9,N=10055,M=1205;
+const int B=1e9,N=10055,M=1205,C=4500;
 int memory_clock()
 {
     PROCESS_MEMORY_COUNTERS pmc;
@@ -25,7 +25,7 @@ struct nd
             x/=B;
         }
     }
-    nd operator+(nd &b) const
+    nd operator+(nd &b)
     {
         nd c(0);
         c.n=max(n,b.n);
@@ -42,7 +42,36 @@ struct nd
             c.n++;
         return c;
     }
-    nd operator-(const nd &b) const
+    void operator+=(nd &b)
+    {
+        n=max(n,b.n);
+        for (int i=1;i<=n;i++)
+        {
+            a[i]+=b.a[i];
+            if (a[i]>=B)
+            {
+                a[i]-=B;
+                a[i+1]++;
+            }
+        }
+        if (a[n+1])
+            n++;
+    }
+    void operator-=(nd &b)
+    {
+        for (int i=1;i<=n;i++)
+        {
+            a[i]-=b.a[i];
+            if (a[i]<0)
+            {
+                a[i]+=B;
+                a[i+1]--;
+            }
+        }
+        while (n>1 && !a[n])
+            n--;
+    }
+    nd operator-(nd &b)
     {
         nd c(0);
         c.n=n;
@@ -59,7 +88,7 @@ struct nd
             c.n--;
         return c;
     }
-    nd operator*(int x) const
+    nd operator*(int x)
     {
         nd c(0);
         c.n=n;
@@ -77,7 +106,7 @@ struct nd
         }
         return c;
     }
-    nd operator/(int x) const
+    nd operator/(int x)
     {
         nd c(0);
         c.n=n;
@@ -92,20 +121,47 @@ struct nd
             c.n--;
         return c;
     }
+    void operator/=(int x)
+    {
+        long long r=0;
+        for (int i=n;i>=1;i--)
+        {
+            r=1LL*r*B+a[i];
+            a[i]=r/x;
+            r%=x;
+        }
+        while (n>1 && !a[n])
+            n--;
+    }
+    void operator*=(int x)
+    {
+        long long r=0;
+        for (int i=1;i<=n;i++)
+        {
+            r += 1LL * a[i] * x;
+            a[i] = r % B;
+            r /= B;
+        }
+        while (r)
+        {
+            a[++n] = r % B;
+            r /= B;
+        }
+    }
 };
 nd arctan(int x)
 {
     nd c(0),t(0);
     t.n=M;
     t.a[M]=1;
-    t=t/x;
-    for (int i=0;t.n&&i<10000;++i)
+    t/=x;
+    for (int i=0;t.n&&i<C;++i)
     {
-        if (i%2) c=c-t;
-        else c=c+t;
-        t=t*(2*i+1);
-        t=t/x,t=t/x;
-        t=t/(2*i+3);
+        if (i%2) c-=t;
+        else c+=t;
+        t*=(2*i+1);
+        t/=x,t/=x;
+        t/=(2*i+3);
     }
     return c;
 }
@@ -127,7 +183,7 @@ int main()
         }
         else printf("%09d",pi.a[i]);
     }
-    printf("\n时间: %.6lf\n",(double)clock()/CLOCKS_PER_SEC);
+    printf("\n时间: %.6lfs\n",(double)clock()/CLOCKS_PER_SEC);
     printf("内存占用: %d KB",memory_clock());
     return 0;
 }

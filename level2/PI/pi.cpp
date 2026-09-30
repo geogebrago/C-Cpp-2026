@@ -99,7 +99,7 @@ nd arctan(int x)
     t.n=M;
     t.a[M]=1;
     t=t/x;
-    for (int i=0;t.n&&i<20000;++i)
+    for (int i=0;t.n&&i<10000;++i)
     {
         if (i%2) c=c-t;
         else c=c+t;
@@ -113,8 +113,8 @@ int main()
 {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
-    nd a=arctan(5)*16,b=arctan(239)*4;
-    nd pi=a-b;
+    nd a=arctan(18)*48,b=arctan(57)*32,c=arctan(239)*20;
+    nd pi=a+b-c;
     for (int i=pi.n;i>=1;i--)
     {
         if (i==pi.n)

@@ -54,7 +54,7 @@ struct nd
                 a[i+1]++;
             }
         }
-        if (a[n+1])
+        while (a[n+1])
             n++;
     }
     void operator-=(nd &b)
@@ -177,9 +177,7 @@ int main()
         {
            string x=to_string(pi.a[i]);
             cout<<x[0]<<".";
-            x.erase(x.begin());
-            for (auto s:x)
-                putchar(s);
+            cout<<x.substr(1);
         }
         else printf("%09d",pi.a[i]);
     }
@@ -187,3 +185,4 @@ int main()
     printf("内存占用: %d KB",memory_clock());
     return 0;
 }
+

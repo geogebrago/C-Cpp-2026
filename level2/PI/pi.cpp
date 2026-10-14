@@ -169,6 +169,7 @@ int main()
 {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
+    double start = clock();
     nd a=arctan(18)*48,b=arctan(57)*32,c=arctan(239)*20;
     nd pi=a+b-c;
     for (int i=pi.n;i>=1;i--)
@@ -181,7 +182,8 @@ int main()
         }
         else printf("%09d",pi.a[i]);
     }
-    printf("\n时间: %.6lfs\n",(double)clock()/CLOCKS_PER_SEC);
+    double end= clock();
+    printf("\n时间: %.6lfs\n",(double)(end-start)/CLOCKS_PER_SEC);
     printf("内存占用: %d KB",memory_clock());
     return 0;
 }

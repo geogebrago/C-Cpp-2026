@@ -34,7 +34,9 @@ void get_path(char *path, const char *name)
 
 void clear_input()
 {
-    while (getchar()!='\n');
+    int ch;
+
+    while ((ch=getchar())!='\n'&&ch!=EOF);
 }
 
 void load()
@@ -49,7 +51,7 @@ void load()
         return;
     }
 
-    while (tot<N-1&&fscanf(fp,"%104s %lf %d",r+1,&y,&x)==3)
+    while (tot<N-1&&fscanf(fp,"%103s %lf %d",r+1,&y,&x)==3)
     {
         if (y<=0||x<0)
             continue;
@@ -107,8 +109,11 @@ void i_n()
 
     printf("请输入商品型号：");
 
-    if (scanf("%104s",r+1)!=1)
+    if (scanf("%103s",r+1)!=1)
     {
+        if (feof(stdin))
+            return;
+
         printf("输入错误！\n");
         clear_input();
         return;
@@ -127,6 +132,9 @@ void i_n()
 
             if (scanf("%d",&s[tot].num)!=1)
             {
+                if (feof(stdin))
+                    return;
+
                 printf("请输入整数！\n");
                 clear_input();
                 continue;
@@ -144,6 +152,9 @@ void i_n()
 
             if (scanf("%lf",&s[tot].w)!=1)
             {
+                if (feof(stdin))
+                    return;
+
                 printf("请输入数字！\n");
                 clear_input();
                 continue;
@@ -198,8 +209,11 @@ void o_t()
     {
         printf("请输入商品型号：");
 
-        if (scanf("%104s",r+1)!=1)
+        if (scanf("%103s",r+1)!=1)
         {
+            if (feof(stdin))
+                return;
+
             printf("输入错误！\n");
             clear_input();
             continue;
@@ -221,6 +235,9 @@ void o_t()
 
         if (scanf("%d",&x)!=1)
         {
+            if (feof(stdin))
+                return;
+
             printf("请输入整数！\n");
             clear_input();
             continue;
@@ -276,6 +293,12 @@ int main()
 
         if (scanf("%d",&x)!=1)
         {
+            if (feof(stdin))
+            {
+                save();
+                return 0;
+            }
+
             printf("请输入1~4的数字！\n");
             clear_input();
             continue;

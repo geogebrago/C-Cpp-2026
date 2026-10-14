@@ -1,6 +1,17 @@
-#include<bits/stdc++.h>
+#include<algorithm>
+#include<cstdio>
+#include<cstdlib>
+#include<cstring>
 #include<Windows.h>
+#include<filesystem>
+#include<iostream>
+#include<limits>
+#ifdef _WIN32
 #include<conio.h>
+#else
+#include<termios.h>
+#include<unistd.h>
+#endif
 using namespace std;
 
 const int N=1005;
@@ -8,15 +19,41 @@ int x,y,tot,nb,nc,ax,ay,now,lev;
 int n,m,bx[N],by[N],cx[N],cy[N],sc[4];
 int dx[5]={0,1,-1,0,0},dy[5]={0,0,0,1,-1};
 char s[N][N];
+filesystem::path base_path;
+
+int read_key()
+{
+#ifdef _WIN32
+    return _getch();
+#else
+    termios old_settings{}, raw_settings{};
+    tcgetattr(STDIN_FILENO, &old_settings);
+    raw_settings = old_settings;
+    raw_settings.c_lflag &= static_cast<tcflag_t>(~(ICANON | ECHO));
+    raw_settings.c_cc[VMIN] = 1;
+    raw_settings.c_cc[VTIME] = 0;
+    tcsetattr(STDIN_FILENO, TCSANOW, &raw_settings);
+
+    int ch = getchar();
+    if (ch == 27 && getchar() == '[')
+    {
+        int direction = getchar();
+        if (direction == 'A') ch = 72;
+        else if (direction == 'B') ch = 80;
+        else if (direction == 'D') ch = 75;
+        else if (direction == 'C') ch = 77;
+    }
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &old_settings);
+    return ch;
+#endif
+}
+
 void get_path(char *path, const char *name)
 {
-    GetModuleFileNameA(NULL, path,  260);
-
-    char *p = strrchr(path, '\\');
-    if (p != NULL)
-        *(p + 1) = '\0';
-
-    strcat(path, name);
+    string file_name = (base_path / name).string();
+    strncpy(path, file_name.c_str(), N - 1);
+    path[N - 1] = '\0';
 }
 bool I_N(int x,int y)
 {
@@ -92,14 +129,14 @@ bool LD(const char *file)
         while(len>0&&(r[len-1]=='\n'||r[len-1]=='\r'))
             r[--len]='\0';
 
-        /*if(n==0&&len>=3&&
+        if(n==0&&len>=3&&
            (unsigned char)r[0]==0xEF&&
            (unsigned char)r[1]==0xBB&&
            (unsigned char)r[2]==0xBF)
         {
             memmove(r,r+3,len-2);
             len-=3;
-        }*/
+        }
 
         if(len==0)
             continue;
@@ -170,7 +207,7 @@ void sol()
 
 void pm()
 {
-    system("cls");
+    cout<<"\033[2J\033[H";
 
     cout<<"==============================\n";
     cout<<"         推箱子小游戏\n";
@@ -207,7 +244,7 @@ bool WIN()
 
 int GT()
 {
-    int ch=_getch();
+    int ch=read_key();
 
     if(ch=='q'||ch=='Q')
         return 0;
@@ -227,7 +264,7 @@ int GT()
         d=3;
     else if(ch==224)
     {
-        ch=_getch();
+        ch=read_key();
         if(ch==72)
             d=2;
         else if(ch==80)
@@ -284,7 +321,7 @@ void SV()
     fclose(fp);
 }
 
-void GL()
+bool GL()
 {
     char file[N];
     if(lev==1)
@@ -301,11 +338,13 @@ void GL()
     }
     if(!LD(file))
     {
-        _getch();
-        return;
+        cout<<"请确认地图文件位于程序同目录: "<<file<<"\n";
+        read_key();
+        return false;
     }
 
     sol();
+    return true;
 }
 
 void G1()
@@ -322,7 +361,7 @@ void G1()
             SV();
 
             cout<<"按任意键返回\n";
-            _getch();
+            read_key();
             return;
         }
 
@@ -332,7 +371,10 @@ void G1()
             return;
 
         if(k==2)
-            GL();
+        {
+            if(!GL())
+                return;
+        }
     }
 }
 
@@ -371,14 +413,24 @@ void prt()
     cout<<"2.成绩\n";
     cout<<"3.退出\n";
 
-    cin>>x;
+    if(!(cin>>x))
+    {
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        return;
+    }
 
     switch(x)
     {
     case 1:
         {
             cout<<"请输入关卡1~3\n";
-            cin>>lev;
+            if(!(cin>>lev))
+            {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                return;
+            }
 
             if(lev<1||lev>3)
             {
@@ -386,8 +438,8 @@ void prt()
                 break;
             }
 
-            GL();
-            G1();
+            if(GL())
+                G1();
             break;
         }
 
@@ -406,7 +458,7 @@ void prt()
             }
 
             cout<<"\n按任意键返回\n";
-            _getch();
+            read_key();
             break;
         }
 
@@ -424,10 +476,15 @@ void prt()
     }
 }
 
-int main()
+int main(int argc, char *argv[])
 {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
+    if(argc>0)
+        base_path=filesystem::absolute(filesystem::path(argv[0])).parent_path();
+    else
+        base_path=filesystem::current_path();
+
     LS();
 
     while(1)

@@ -26,7 +26,8 @@ public:
     {
         delete[] a;
     }
-    dnager_array &operator=(dnager_array &)=delete;
+    dnager_array(const dnager_array &)=delete;
+    dnager_array &operator=(const dnager_array &)=delete;
     T &operator[](int i)
     {
         if (i<0||i>=n)

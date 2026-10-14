@@ -2,7 +2,7 @@
 #include <Windows.h>
 using namespace std;
 
-const int N = 35, P = 1000, L = 80, R = 20, C = 20;
+const int N = 35, P = 2000, L = 100, R = 20, C = 20, G = 2000;
 
 int dx[4] = {1, 0, -1, 0}, dy[4] = {0, 1, 0, -1};
 mt19937 rd(time(NULL));
@@ -41,33 +41,38 @@ void prt(int id)
 
     for (int i = 0; i < L; i++)
     {
-        if (p[id].s[i] == 0)
-        {
-            xx++;
-            cout << "下 ";
-        }
-        else if (p[id].s[i] == 1)
-        {
-            yy++;
-            cout << "右 ";
-        }
-        else if (p[id].s[i] == 2)
-        {
-            xx--;
-            cout << "上 ";
-        }
-        else if (p[id].s[i] == 3)
-        {
-            yy--;
-            cout << "左 ";
-        }
+        int nx = xx + dx[p[id].s[i]];
+        int ny = yy + dy[p[id].s[i]];
 
+        if (nx < 0 || nx >= R || ny < 0 || ny >= C || s[nx][ny] == '#')
+            continue;
+
+        xx = nx;
+        yy = ny;
+        s[xx][yy] = '*';
+        if (p[id].s[i] == 0)
+            cout << "下 ";
+        else if (p[id].s[i] == 1)
+            cout << "右 ";
+        else if (p[id].s[i] == 2)
+            cout << "上 ";
+        else if (p[id].s[i] == 3)
+            cout << "左 ";
         if (xx == 18 && yy == 19)
         {
             cout << "到达终点" << endl;
+            for (int k = 0; k < R; k++)
+            {
+                for (int j = 0; j < C; j++)
+                {
+                    cout << s[k][j];
+                }
+                cout << endl;
+            }
             return;
         }
     }
+    cout << endl;
 }
 
 int dst(int x, int y)
@@ -99,7 +104,7 @@ int calc(nd &a)
 
         if (s[nx][ny] == '$')
         {
-            return P + L - i;
+            return 1000000 + (L - i) * 1000;
         }
 
         fit += od - dst(a.x, a.y);
@@ -112,7 +117,7 @@ int calc(nd &a)
 
 nd &cham()
 {
-    nd &x = p[rd() % P], &y = p[rd() % P], &z = q[rd() % P];
+    nd &x = p[rd() % P], &y = p[rd() % P], &z = p[rd() % P];
 
     if (x.fit < y.fit)
         swap(x, y);
@@ -175,9 +180,10 @@ int main()
         }
     }
 
-    bool flag = false;
+    int bft = -1;
+    nd bs;
 
-    for (int g = 0; g < P; g++)
+    for (int g = 0; g < G; g++)
     {
         for (int i = 0; i < P; i++)
             p[i].fit = calc(p[i]);
@@ -190,17 +196,15 @@ int main()
                 id = i;
         }
 
-        if (p[id].fit >= P)
+        if (p[id].fit > bft)
         {
-            cout << "找到路径，路径为：";
-            prt(id);
-            flag = true;
-            break;
+            bft = p[id].fit;
+            bs = p[id];
         }
 
         q[0] = p[id];
 
-        int muta = max(1, 8 - g * 7 / P);
+        int muta = max(1, 5 - g * 4 / G);
 
         for (int i = 1; i < P; i += 2)
         {
@@ -238,8 +242,17 @@ int main()
         swap(p, q);
     }
 
-    if (!flag)
+    if (bft >= 1000000)
+    {
+        p[0] = bs;
+        int stp = (bft-1000000)/1000;
+        cout << "找到路径，共 " << L - stp << " 步，路径为：";
+        prt(0);
+    }
+    else
+    {
         printf("未找到路径\n");
+    }
 
     return 0;
 }

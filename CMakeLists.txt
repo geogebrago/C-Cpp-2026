@@ -39,3 +39,8 @@ add_compile_options("-utf-8")
 
 add_link_options("-utf-8")
 add_executable(new_target level2/SkipList/tb.cpp)
+
+add_executable(pi level2/PI/pi.cpp)
+if (WIN32)
+    target_link_libraries(pi PRIVATE psapi)
+endif()

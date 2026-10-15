@@ -143,6 +143,8 @@ int main()
 
             for (int k = 0; k < 4; k++)
             {
+                if (j>0 && (p[i].s[j - 1] + 2) % 4 == k)
+                    continue;
                 int nx = cx + dx[k];
                 int ny = cy + dy[k];
 

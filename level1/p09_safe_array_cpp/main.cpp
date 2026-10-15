@@ -43,7 +43,6 @@ public:
 int main()
 {
     dnager_array<int> a(3);
-
     a[0]=114514;
     a[1]=1919810;
 

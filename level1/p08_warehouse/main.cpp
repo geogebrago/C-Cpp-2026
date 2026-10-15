@@ -35,7 +35,6 @@ void get_path(char *path, const char *name)
 void clear_input()
 {
     int ch;
-
     while ((ch=getchar())!='\n'&&ch!=EOF);
 }
 

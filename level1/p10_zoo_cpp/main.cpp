@@ -1,4 +1,108 @@
-#include<bits/stdc++.h>
+#include <iostream>
+#include <vector>
+#include <windows.h>
+using namespace std;
+
+class Animal
+{
+public:
+    virtual void speak() = 0;
+    virtual ~Animal() = default;
+};
+
+namespace {
+    class Dog : public Animal
+    {
+    public:
+        void speak() override
+        {
+            cout << "汪汪！" << endl;
+            Beep(800, 200);
+            Beep(600, 200);
+        }
+    };
+
+    class Cat : public Animal
+    {
+    public:
+        void speak() override
+        {
+            cout << "喵喵！" << endl;
+            Beep(1000, 150);
+            Beep(800, 150);
+        }
+    };
+
+    class Bird : public Animal
+    {
+    public:
+        void speak() override
+        {
+            cout << "啾啾！" << endl;
+            Beep(1200, 100);
+            Beep(1000, 100);
+        }
+    };
+
+    class WolfDog : public Animal
+    {
+    public:
+        void speak() override
+        {
+            cout << "嗷嗷！" << endl;
+            Beep(500, 200);
+            Beep(400, 200);
+        }
+    };
+}
+
+class Zoo
+{
+private:
+    vector<Animal*> animals;
+
+public:
+    void add(Animal* animal)
+    {
+        if (animal != nullptr)
+        {
+            animals.push_back(animal);
+        }
+    }
+
+    void speakAll()
+    {
+        for (Animal* animal : animals)
+        {
+            if (animal != nullptr)
+            {
+                animal->speak();
+            }
+        }
+    }
+};
+
+int main()
+{
+    Zoo zoo;
+
+    Dog dog;
+    Cat cat;
+    Bird bird;
+    WolfDog wolfDog;
+
+    zoo.add(&dog);
+    zoo.add(&cat);
+    zoo.add(&bird);
+    zoo.add(&wolfDog);
+
+    zoo.speakAll();
+
+    return 0;
+}
+
+
+/*#include<bits/stdc++.h>
 #include<Windows.h>
 using namespace std;
 
@@ -217,4 +321,4 @@ int main()
     }
 
     return 0;
-}
+}*/

@@ -2,18 +2,17 @@
 
 int main()
 {
-    long long n;
-    scanf_s("%lld", &n);
-
-    if (n < 2)
+    long long number;
+    scanf("%lld", &number);
+    if (number < 2)
     {
         printf("No");
         return 0;
     }
 
-    for (long long i = 2; i <= n / i; ++i)
+    for (long long divisor = 2; divisor <= number / divisor; ++divisor)
     {
-        if (n % i == 0)
+        if (number % divisor == 0)
         {
             printf("No");
             return 0;

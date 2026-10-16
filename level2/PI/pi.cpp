@@ -1,190 +1,193 @@
 ﻿#include <bits/stdc++.h>
 #include <windows.h>
 #include <psapi.h>
+
 using namespace std;
-const int B=1e9,N=10055,M=1205,C=4500;
-int memory_clock()
+
+constexpr int DIGIT_BASE = 1e9;
+constexpr int MAX_DIGITS = 10055;
+constexpr int PRECISION_POSITION = 1205;
+constexpr int MAX_ITERATIONS = 4500;
+
+static int get_memory_usage_kb()
 {
-    PROCESS_MEMORY_COUNTERS pmc;
-    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
+    PROCESS_MEMORY_COUNTERS memory_counters;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &memory_counters, sizeof(memory_counters)))
     {
-        return pmc.PeakWorkingSetSize / 1024;
+        return static_cast<int>(memory_counters.PeakWorkingSetSize / 1024);
     }
     return -1;
 }
-struct nd
+
+namespace
 {
-    int n,a[N];
-    nd(int x=0)
+    struct BigInteger
     {
-        n=0;
-        memset(a,0,sizeof(a));
-        while (x)
+        int length;
+        int digits[MAX_DIGITS];
+
+        BigInteger(int value = 0) : length(0), digits{0}
         {
-            a[++n]=x%B;
-            x/=B;
-        }
-    }
-    nd operator+(nd &b)
-    {
-        nd c(0);
-        c.n=max(n,b.n);
-        for (int i=1;i<=c.n;i++)
-        {
-            c.a[i]+=a[i]+b.a[i];
-            if (c.a[i]>=B)
+            while (value)
             {
-                c.a[i]-=B;
-                c.a[i+1]++;
+                digits[++length] = value % DIGIT_BASE;
+                value /= DIGIT_BASE;
             }
         }
-        if (c.a[c.n+1])
-            c.n++;
-        return c;
-    }
-    void operator+=(nd &b)
-    {
-        n=max(n,b.n);
-        for (int i=1;i<=n;i++)
+
+        void operator+=(const BigInteger& other)
         {
-            a[i]+=b.a[i];
-            if (a[i]>=B)
+            length = max(length, other.length);
+            for (int i = 1; i <= length; ++i)
             {
-                a[i]-=B;
-                a[i+1]++;
+                digits[i] += other.digits[i];
+                if (digits[i] >= DIGIT_BASE)
+                {
+                    digits[i] -= DIGIT_BASE;
+                    digits[i + 1]++;
+                }
+            }
+            while (digits[length + 1])
+                ++length;
+        }
+
+        void operator-=(const BigInteger& other)
+        {
+            for (int i = 1; i <= length; ++i)
+            {
+                digits[i] -= other.digits[i];
+                if (digits[i] < 0)
+                {
+                    digits[i] += DIGIT_BASE;
+                    digits[i + 1]--;
+                }
+            }
+            while (length > 1 && digits[length] == 0)
+                --length;
+        }
+
+        BigInteger operator*(int multiplier) const
+        {
+            BigInteger result(0);
+            result.length = length;
+
+            if (length == 0 || multiplier == 0)
+                return result;
+
+            long long carry = 0;
+            for (int i = 1; i <= length; ++i)
+            {
+                carry += 1LL * digits[i] * multiplier;
+                result.digits[i] = static_cast<int>(carry % DIGIT_BASE);
+                carry /= DIGIT_BASE;
+            }
+            while (carry)
+            {
+                result.digits[++result.length] = static_cast<int>(carry % DIGIT_BASE);
+                carry /= DIGIT_BASE;
+            }
+            return result;
+        }
+
+        void operator/=(int divisor)
+        {
+            if (divisor == 0)
+                return;
+
+            long long remainder = 0;
+            for (int i = length; i >= 1; --i)
+            {
+                remainder = 1LL * remainder * DIGIT_BASE + digits[i];
+                digits[i] = static_cast<int>(remainder / divisor);
+                remainder %= divisor;
+            }
+            while (length > 1 && digits[length] == 0)
+                --length;
+        }
+
+        void operator*=(int multiplier)
+        {
+            if (multiplier == 0)
+            {
+                memset(digits, 0, sizeof(digits));
+                length = 1;
+                digits[1] = 0;
+                return;
+            }
+
+            long long carry = 0;
+            for (int i = 1; i <= length; ++i)
+            {
+                carry += 1LL * digits[i] * multiplier;
+                digits[i] = static_cast<int>(carry % DIGIT_BASE);
+                carry /= DIGIT_BASE;
+            }
+            while (carry)
+            {
+                digits[++length] = static_cast<int>(carry % DIGIT_BASE);
+                carry /= DIGIT_BASE;
             }
         }
-        while (a[n+1])
-            n++;
-    }
-    void operator-=(nd &b)
-    {
-        for (int i=1;i<=n;i++)
-        {
-            a[i]-=b.a[i];
-            if (a[i]<0)
-            {
-                a[i]+=B;
-                a[i+1]--;
-            }
-        }
-        while (n>1 && !a[n])
-            n--;
-    }
-    nd operator-(nd &b)
-    {
-        nd c(0);
-        c.n=n;
-        for (int i=1;i<=c.n;i++)
-        {
-            c.a[i]+=a[i]-b.a[i];
-            if (c.a[i]<0)
-            {
-                c.a[i]+=B;
-                c.a[i+1]--;
-            }
-        }
-        while (c.n>1 && !c.a[c.n])
-            c.n--;
-        return c;
-    }
-    nd operator*(int x)
-    {
-        nd c(0);
-        c.n=n;
-        long long r=0;
-        for (int i=1;i<=c.n;i++)
-        {
-            r += 1LL * a[i] * x;
-            c.a[i] = r % B;
-            r /= B;
-        }
-        while (r)
-        {
-            c.a[++c.n] = r % B;
-            r /= B;
-        }
-        return c;
-    }
-    nd operator/(int x)
-    {
-        nd c(0);
-        c.n=n;
-        long long r=0;
-        for (int i=c.n;i>=1;i--)
-        {
-            r=1LL*r*B+a[i];
-            c.a[i]=r/x;
-            r%=x;
-        }
-        while (c.n>1 && !c.a[c.n])
-            c.n--;
-        return c;
-    }
-    void operator/=(int x)
-    {
-        long long r=0;
-        for (int i=n;i>=1;i--)
-        {
-            r=1LL*r*B+a[i];
-            a[i]=r/x;
-            r%=x;
-        }
-        while (n>1 && !a[n])
-            n--;
-    }
-    void operator*=(int x)
-    {
-        long long r=0;
-        for (int i=1;i<=n;i++)
-        {
-            r += 1LL * a[i] * x;
-            a[i] = r % B;
-            r /= B;
-        }
-        while (r)
-        {
-            a[++n] = r % B;
-            r /= B;
-        }
-    }
-};
-nd arctan(int x)
-{
-    nd c(0),t(0);
-    t.n=M;
-    t.a[M]=1;
-    t/=x;
-    for (int i=0;t.n&&i<C;++i)
-    {
-        if (i%2) c-=t;
-        else c+=t;
-        t*=(2*i+1);
-        t/=x,t/=x;
-        t/=(2*i+3);
-    }
-    return c;
+    };
 }
+
+static BigInteger arctangent(int denominator)
+{
+    BigInteger result(0);
+    BigInteger term(0);
+
+    term.length = PRECISION_POSITION;
+    term.digits[PRECISION_POSITION] = 1;
+    term /= denominator;
+
+    for (int index = 0; term.length != 0 && index < MAX_ITERATIONS; ++index)
+    {
+        if (index % 2 == 0)
+            result += term;
+        else
+            result -= term;
+
+        term *= (2 * index + 1);
+        term /= denominator;
+        term /= denominator;
+        term /= (2 * index + 3);
+    }
+
+    return result;
+}
+
 int main()
 {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
-    double start = clock();
-    nd a=arctan(18)*48,b=arctan(57)*32,c=arctan(239)*20;
-    nd pi=a+b-c;
-    for (int i=pi.n;i>=1;i--)
+
+    double start_time = clock();
+
+    BigInteger term1 = arctangent(18);
+    BigInteger term2 = arctangent(57) * 32;
+    BigInteger term3 = arctangent(239) * 20;
+
+    BigInteger pi_value = term1;
+    pi_value += term2;
+    pi_value -= term3;
+
+    for (int digit_index = pi_value.length; digit_index >= 1; --digit_index)
     {
-        if (i==pi.n)
+        if (digit_index == pi_value.length)
         {
-           string x=to_string(pi.a[i]);
-            cout<<x[0]<<".";
-            cout<<x.substr(1);
+            string first_digit_str = to_string(pi_value.digits[digit_index]);
+            cout << first_digit_str[0] << ".";
+            cout << first_digit_str.substr(1);
         }
-        else printf("%09d",pi.a[i]);
+        else
+        {
+            printf("%09d", pi_value.digits[digit_index]);
+        }
     }
-    double end= clock();
-    printf("\n时间: %.6lfs\n",(double)(end-start)/CLOCKS_PER_SEC);
-    printf("内存占用: %d KB",memory_clock());
+
+    double end_time = clock();
+    printf("\n时间: %.6lfs\n", (double)(end_time - start_time) / CLOCKS_PER_SEC);
+    printf("内存占用: %d KB", get_memory_usage_kb());
+
     return 0;
 }
-

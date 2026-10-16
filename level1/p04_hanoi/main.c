@@ -1,27 +1,26 @@
 #include <stdio.h>
 
-void move(int n, char fr, char tp, char to)
+static void hanoi_move(int disk_count, char from_rod, char auxiliary_rod, char target_rod)
 {
-    if (n <= 0)
+    if (disk_count <= 0)
         return;
 
-    if (n == 1)
+    if (disk_count == 1)
     {
-        printf("%c -> %c\n", fr, to);
+        printf("%c -> %c\n", from_rod, target_rod);
         return;
     }
 
-    move(n - 1, fr, to, tp);
+    hanoi_move(disk_count - 1, from_rod, target_rod, auxiliary_rod);
 
-    printf("%c -> %c\n", fr, to);
+    printf("%c -> %c\n", from_rod, target_rod);
 
-    move(n - 1, tp, fr, to);
+    hanoi_move(disk_count - 1, auxiliary_rod, from_rod, target_rod);
 }
 
 int main()
 {
-    const int N = 3;
-    move(N, 'A', 'B', 'C');
-
+    const int total_disks = 3;
+    hanoi_move(total_disks, 'A', 'B', 'C');
     return 0;
 }

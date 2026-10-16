@@ -1,237 +1,251 @@
 ﻿#include <bits/stdc++.h>
 using namespace std;
 
-const int M_L = 32, N = 100005;
-mt19937 rd(time(NULL));
+int MAX_LEVEL;
+int seed = 114514;
 
-struct nd
+unsigned nextRandom()
 {
-    int key, lv;
-    nd **fwd;
-    int *span;
-    nd *in_fwd[4];
-    int in_sp[4];
+    seed ^= seed << 13;
+    seed ^= seed >> 17;
+    seed ^= seed << 5;
+    return seed;
+}
 
-    nd(int k, int lvl)
+struct Node
+{
+    int key, level;
+    Node **forward;
+    int *span;
+    Node *inlineForward[4]{};
+    int inlineSpan[4]{};
+
+    Node(int k, int lvl)
     {
-        key = k, lv = lvl;
+        key = k, level = lvl;
         if (lvl <= 4)
         {
-            fwd = in_fwd;
-            span = in_sp;
+            forward = inlineForward;
+            span = inlineSpan;
             for (int i = 0; i < lvl; ++i)
             {
-                fwd[i] = nullptr;
+                forward[i] = nullptr;
                 span[i] = 0;
             }
         }
         else
         {
-            fwd = new nd *[lvl];
+            forward = new Node *[lvl];
             span = new int[lvl];
-            fill(fwd, fwd + lvl, nullptr);
-            fill(span, span + lvl, 0);
+            fill_n(forward, lvl, nullptr);
+            fill_n(span, lvl, 0);
         }
     }
 
-    ~nd()
+    ~Node()
     {
-        if (lv > 4)
+        if (level > 4)
         {
-            delete[] fwd;
+            delete[] forward;
             delete[] span;
         }
     }
 };
 
-class skiplist
+class SkipList
 {
 private:
-    nd *hd;
-    int lv;
+    Node *head;
+    int level;
 
-    int rdlv()
+    static int randomLevel()
     {
-        unsigned int r = rd();
+        unsigned int r = nextRandom();
+        if (r == 0xFFFFFFFFu)
+            return MAX_LEVEL;
         int zeros = __builtin_ctz(~r);
-        int l = zeros + 1;
-        return l;
+        return zeros >= MAX_LEVEL - 1 ? MAX_LEVEL : zeros + 1;
     }
-
 
 public:
-    skiplist()
+    SkipList()
     {
-        hd = new nd(0, M_L);
-        lv = 1;
+        head = new Node(0, MAX_LEVEL);
+        level = 1;
     }
 
-    ~skiplist()
+    ~SkipList()
     {
-        nd *cur = hd->fwd[0];
+        Node *cur = head->forward[0];
         while (cur)
         {
-            nd *nt = cur->fwd[0];
+            Node *nt = cur->forward[0];
             delete cur;
             cur = nt;
         }
-        delete hd;
+        delete head;
     }
 
-    void bd(int *s, int n)
+    void build(int *values, int n)
     {
         if (n == 0)
         {
-            lv = 1;
-            fill(hd->fwd,hd->fwd+M_L,nullptr);
-            fill(hd->span,hd->span+M_L,0);
+            level = 1;
+            fill_n(head->forward, MAX_LEVEL, nullptr);
+            fill_n(head->span, MAX_LEVEL, 0);
             return;
         }
 
-        sort(s, s + n);
-        lv = min(M_L, __lg(n) + 1);
+        sort(values, values + n);
+        level = min(MAX_LEVEL, __lg(n) + 1);
 
-        int *lv1 = new int[n];
-        lv1[0] = lv;
-        for (int i = 1; i < n; ++i)
-        {
-            int k = __builtin_ctz((unsigned int)i) + 1;
-            lv1[i] = k < lv ? k : lv;
-        }
-
-        nd **nds = new nd *[n];
-        for (int i = 0; i < n; ++i)
-            nds[i] = new nd(s[i], lv1[i]);
-
-        for (int i = 0; i < M_L; ++i)
-        {
-            hd->fwd[i] = nullptr;
-            hd->span[i] = 0;
-        }
-
-        hd->fwd[0] = nds[0];
+        int *nodeLevels = new int[n];
         for (int i = 0; i < n; ++i)
         {
-            nds[i]->fwd[0] = (i + 1 < n) ? nds[i + 1] : nullptr;
-            nds[i]->span[0] = 1;
+            if (i == 0)
+            {
+                nodeLevels[i] = level;
+            }
+            else
+            {
+                int k = __builtin_ctz(static_cast<unsigned int>(i)) + 1;
+                nodeLevels[i] = k < level ? k : level;
+            }
         }
-        hd->span[0] = 1;
 
-        for (int i = 1; i < lv; ++i)
+        Node **nodes = new Node *[n];
+        for (int i = 0; i < n; ++i)
+            nodes[i] = new Node(values[i], nodeLevels[i]);
+
+        for (int i = 0; i < MAX_LEVEL; ++i)
         {
-            nd *pre = hd;
-            int prerk = 0;
-            nd *cur = hd->fwd[0];
-            int currk = 0;
+            head->forward[i] = nullptr;
+            head->span[i] = 0;
+        }
+
+        head->forward[0] = nodes[0];
+        for (int i = 0; i < n; ++i)
+        {
+            nodes[i]->forward[0] = (i + 1 < n) ? nodes[i + 1] : nullptr;
+            nodes[i]->span[0] = 1;
+        }
+        head->span[0] = 1;
+
+        for (int i = 1; i < level; ++i)
+        {
+            Node *prev = head;
+            int prevRank = 0;
+            Node *cur = head->forward[0];
+            int curRank = 0;
             while (cur)
             {
-                ++currk;
-                if (cur->lv > i)
+                ++curRank;
+                if (cur->level > i)
                 {
-                    pre->fwd[i] = cur;
-                    pre->span[i] = currk - prerk;
-                    prerk = currk;
-                    pre = cur;
+                    prev->forward[i] = cur;
+                    prev->span[i] = curRank - prevRank;
+                    prevRank = curRank;
+                    prev = cur;
                 }
-                cur = cur->fwd[0];
+                cur = cur->forward[0];
             }
         }
 
-        delete[] lv1;
-        delete[] nds;
+        delete[] nodeLevels;
+        delete[] nodes;
     }
 
-    void ins(int x)
+    void insert(int x)
     {
-        nd *upt[M_L];
-        int rk[M_L];
-        nd *p = hd;
+        Node *update[MAX_LEVEL];
+        int ranks[MAX_LEVEL];
+        Node *p = head;
 
-        for (int i = lv - 1; i >= 0; --i)
+        for (int i = level - 1; i >= 0; --i)
         {
-            rk[i] = (i == lv - 1) ? 0 : rk[i + 1];
-            while (p->fwd[i] && p->fwd[i]->key < x)
+            ranks[i] = (i == level - 1) ? 0 : ranks[i + 1];
+            while (p->forward[i] && p->forward[i]->key < x)
             {
-                rk[i] += p->span[i];
-                p = p->fwd[i];
+                ranks[i] += p->span[i];
+                p = p->forward[i];
             }
-            upt[i] = p;
+            update[i] = p;
         }
 
-        int nlv = rdlv();
-        if (nlv > lv)
+        int newLevel = randomLevel();
+        if (newLevel > level)
         {
-            for (int i = lv; i < nlv; ++i)
+            for (int i = level; i < newLevel; ++i)
             {
-                upt[i] = hd;
-                rk[i] = 0;
-                hd->span[i] = 0;
-                hd->fwd[i] = nullptr;
+                update[i] = head;
+                ranks[i] = 0;
+                head->span[i] = 0;
+                head->forward[i] = nullptr;
             }
-            lv = nlv;
+            level = newLevel;
         }
 
-        nd *new_node = new nd(x, nlv);
-        for (int i = 0; i < nlv; ++i)
+        Node *newNode = new Node(x, newLevel);
+        for (int i = 0; i < newLevel; ++i)
         {
-            new_node->fwd[i] = upt[i]->fwd[i];
-            if (upt[i]->fwd[i])
-                new_node->span[i] = upt[i]->span[i] - (rk[0] - rk[i]);
+            newNode->forward[i] = update[i]->forward[i];
+            if (update[i]->forward[i])
+                newNode->span[i] = update[i]->span[i] - (ranks[0] - ranks[i]);
             else
-                new_node->span[i] = 0;
+                newNode->span[i] = 0;
 
-            upt[i]->fwd[i] = new_node;
-            upt[i]->span[i] = rk[0] - rk[i] + 1;
+            update[i]->forward[i] = newNode;
+            update[i]->span[i] = ranks[0] - ranks[i] + 1;
         }
 
-        for (int i = nlv; i < lv; ++i)
-            ++upt[i]->span[i];
+        for (int i = newLevel; i < level; ++i)
+            ++update[i]->span[i];
     }
 
-    void del(int x)
+    void erase(int x)
     {
-        nd *upt[M_L];
-        nd *p = hd;
+        Node *update[MAX_LEVEL];
+        Node *p = head;
 
-        for (int i = lv - 1; i >= 0; --i)
+        for (int i = level - 1; i >= 0; --i)
         {
-            while (p->fwd[i] && p->fwd[i]->key < x)
-                p = p->fwd[i];
-            upt[i] = p;
+            while (p->forward[i] && p->forward[i]->key < x)
+                p = p->forward[i];
+            update[i] = p;
         }
 
-        p = p->fwd[0];
+        p = p->forward[0];
         if (p && p->key == x)
         {
-            for (int i = 0; i < lv; ++i)
+            for (int i = 0; i < level; ++i)
             {
-                if (upt[i]->fwd[i] == p)
+                if (update[i]->forward[i] == p)
                 {
-                    upt[i]->span[i] += p->span[i] - 1;
-                    upt[i]->fwd[i] = p->fwd[i];
+                    update[i]->span[i] += p->span[i] - 1;
+                    update[i]->forward[i] = p->forward[i];
                 }
                 else
                 {
-                    --upt[i]->span[i];
+                    --update[i]->span[i];
                 }
             }
             delete p;
 
-            while (lv > 1 && hd->fwd[lv - 1] == nullptr)
-                --lv;
+            while (level > 1 && head->forward[level - 1] == nullptr)
+                --level;
         }
     }
 
-    int rk(int x)
+    int rank(int x)
     {
-        nd *p = hd;
+        Node *p = head;
         int r = 0;
-        for (int i = lv - 1; i >= 0; --i)
+        for (int i = level - 1; i >= 0; --i)
         {
-            while (p->fwd[i] && p->fwd[i]->key < x)
+            while (p->forward[i] && p->forward[i]->key < x)
             {
                 r += p->span[i];
-                p = p->fwd[i];
+                p = p->forward[i];
             }
         }
         return r + 1;
@@ -239,81 +253,102 @@ public:
 
     int kth(int x)
     {
-        nd *p = hd;
+        Node *p = head;
         int r = 0;
-        for (int i = lv - 1; i >= 0; --i)
+        for (int i = level - 1; i >= 0; --i)
         {
-            while (p->fwd[i] && r + p->span[i] <= x)
+            while (p->forward[i] && r + p->span[i] <= x)
             {
                 r += p->span[i];
-                p = p->fwd[i];
+                p = p->forward[i];
             }
         }
         return p->key;
     }
 
-    int pre(int x)
+    int predecessor(int x)
     {
-        nd *p = hd;
-        for (int i = lv - 1; i >= 0; --i)
+        Node *p = head;
+        for (int i = level - 1; i >= 0; --i)
         {
-            while (p->fwd[i] && p->fwd[i]->key < x)
-                p = p->fwd[i];
+            while (p->forward[i] && p->forward[i]->key < x)
+                p = p->forward[i];
         }
-        if (p == hd)
+        if (p == head)
             return -1;
         return p->key;
     }
 
-    int nt(int x)
+    int successor(int x)
     {
-        nd *p = hd;
-        for (int i = lv - 1; i >= 0; --i)
+        Node *p = head;
+        for (int i = level - 1; i >= 0; --i)
         {
-            while (p->fwd[i] && p->fwd[i]->key <= x)
-                p = p->fwd[i];
+            while (p->forward[i] && p->forward[i]->key <= x)
+                p = p->forward[i];
         }
-        if (p->fwd[0] == nullptr)
+        if (p->forward[0] == nullptr)
             return -1;
-        return p->fwd[0]->key;
+        return p->forward[0]->key;
     }
 };
 
+namespace
+{
+int readInt()
+{
+    int x = 0;
+    int c = getchar();
+    while (c < '0' || c > '9')
+        c = getchar();
+    while (c >= '0' && c <= '9')
+    {
+        x = x * 10 + (c - '0');
+        c = getchar();
+    }
+    return x;
+}
+}
+
 int main()
 {
-    int n, m;
-     scanf("%d", &n);
-    scanf("%d", &m);
-    skiplist sl;
-     int *s = new int[n];
+    int n = readInt();
+    int m = readInt();
+    MAX_LEVEL = __lg(n + m) + 2;
+    SkipList sl;
+    int *values = new int[n];
     for (int i = 0; i < n; ++i)
-        scanf("%d", &s[i]);
-    sl.bd(s, n);
-    delete[] s;
+        values[i] = readInt();
+
+    sl.build(values, n);
+    delete[] values;
 
     while (m--)
     {
-        int opt, x;
-        scanf("%d%d", &opt, &x);
+        int opt = readInt();
+        int x = readInt();
+
         switch (opt)
         {
         case 1:
-            sl.ins(x);
+            sl.insert(x);
             break;
         case 2:
-            sl.del(x);
+            sl.erase(x);
             break;
         case 3:
-            printf("%d\n", sl.rk(x));
+            printf("%d\n", sl.rank(x));
             break;
         case 4:
             printf("%d\n", sl.kth(x));
             break;
         case 5:
-            printf("%d\n", sl.pre(x));
+            printf("%d\n", sl.predecessor(x));
             break;
         case 6:
-            printf("%d\n", sl.nt(x));
+            printf("%d\n", sl.successor(x));
+            break;
+        default:
             break;
         }
     }

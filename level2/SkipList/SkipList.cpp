@@ -9,20 +9,38 @@ struct nd
     int key, lv;
     nd **fwd;
     int *span;
+    nd *in_fwd[4];
+    int in_sp[4];
 
     nd(int k, int lvl)
     {
         key = k, lv = lvl;
-        fwd = new nd*[lvl];
-        span = new int[lvl];
-        fill(fwd, fwd + lvl, nullptr);
-        fill(span, span + lvl, 0);
+        if (lvl <= 4)
+        {
+            fwd = in_fwd;
+            span = in_sp;
+            for (int i = 0; i < lvl; ++i)
+            {
+                fwd[i] = nullptr;
+                span[i] = 0;
+            }
+        }
+        else
+        {
+            fwd = new nd *[lvl];
+            span = new int[lvl];
+            fill(fwd, fwd + lvl, nullptr);
+            fill(span, span + lvl, 0);
+        }
     }
 
     ~nd()
     {
-        delete[] fwd;
-        delete[] span;
+        if (lv > 4)
+        {
+            delete[] fwd;
+            delete[] span;
+        }
     }
 };
 
@@ -34,11 +52,12 @@ private:
 
     int rdlv()
     {
-        int l = 1;
-        while (rd() & 1 && l < M_L)
-            ++l;
+        unsigned int r = rd();
+        int zeros = __builtin_ctz(~r);
+        int l = zeros + 1;
         return l;
     }
+
 
 public:
     skiplist()
@@ -64,11 +83,8 @@ public:
         if (n == 0)
         {
             lv = 1;
-            for (int i = 0; i < M_L; ++i)
-            {
-                hd->fwd[i] = nullptr;
-                hd->span[i] = 0;
-            }
+            fill(hd->fwd,hd->fwd+M_L,nullptr);
+            fill(hd->span,hd->span+M_L,0);
             return;
         }
 
@@ -76,19 +92,18 @@ public:
         lv = min(M_L, __lg(n) + 1);
 
         int *lv1 = new int[n];
-        for (int i = 0; i < n; ++i)
+        lv1[0] = lv;
+        for (int i = 1; i < n; ++i)
         {
-            int k = 1;
-            while (k < lv && i % (1 << k) == 0)
-                ++k;
-            lv1[i] = k;
+            int k = __builtin_ctz((unsigned int)i) + 1;
+            lv1[i] = k < lv ? k : lv;
         }
 
-        nd **nds = new nd*[n];
+        nd **nds = new nd *[n];
         for (int i = 0; i < n; ++i)
             nds[i] = new nd(s[i], lv1[i]);
 
-        for (int i = 0; i < lv; ++i)
+        for (int i = 0; i < M_L; ++i)
         {
             hd->fwd[i] = nullptr;
             hd->span[i] = 0;
@@ -161,7 +176,7 @@ public:
         {
             new_node->fwd[i] = upt[i]->fwd[i];
             if (upt[i]->fwd[i])
-                new_node->span[i] = upt[i]->span[i] - (rk[0] - rk[i] + 1);
+                new_node->span[i] = upt[i]->span[i] - (rk[0] - rk[i]);
             else
                 new_node->span[i] = 0;
 
@@ -172,7 +187,6 @@ public:
         for (int i = nlv; i < lv; ++i)
             ++upt[i]->span[i];
     }
-
 
     void del(int x)
     {
@@ -268,9 +282,10 @@ public:
 int main()
 {
     int n, m;
-    scanf("%d%d", &n, &m);
+     scanf("%d", &n);
+    scanf("%d", &m);
     skiplist sl;
-    int *s = new int[n];
+     int *s = new int[n];
     for (int i = 0; i < n; ++i)
         scanf("%d", &s[i]);
     sl.bd(s, n);
@@ -282,24 +297,24 @@ int main()
         scanf("%d%d", &opt, &x);
         switch (opt)
         {
-            case 1:
-                sl.ins(x);
-                break;
-            case 2:
-                sl.del(x);
-                break;
-            case 3:
-                printf("%d\n", sl.rk(x));
-                break;
-            case 4:
-                printf("%d\n", sl.kth(x));
-                break;
-            case 5:
-                printf("%d\n", sl.pre(x));
-                break;
-            case 6:
-                printf("%d\n", sl.nt(x));
-                break;
+        case 1:
+            sl.ins(x);
+            break;
+        case 2:
+            sl.del(x);
+            break;
+        case 3:
+            printf("%d\n", sl.rk(x));
+            break;
+        case 4:
+            printf("%d\n", sl.kth(x));
+            break;
+        case 5:
+            printf("%d\n", sl.pre(x));
+            break;
+        case 6:
+            printf("%d\n", sl.nt(x));
+            break;
         }
     }
     return 0;

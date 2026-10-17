@@ -27,11 +27,8 @@ struct Node
         {
             forward = inlineForward;
             span = inlineSpan;
-            for (int i = 0; i < lvl; ++i)
-            {
-                forward[i] = nullptr;
-                span[i] = 0;
-            }
+            fill(forward, forward + lvl, nullptr);
+            fill(span, span + lvl, 0);
         }
         else
         {

@@ -163,7 +163,7 @@ int main()
 
     double start_time = clock();
 
-    BigInteger term1 = arctangent(18);
+    BigInteger term1 = arctangent(18)* 48;
     BigInteger term2 = arctangent(57) * 32;
     BigInteger term3 = arctangent(239) * 20;
 

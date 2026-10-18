@@ -130,21 +130,23 @@ public:
 
         for (int i = 1; i < level; ++i)
         {
-            Node *prev = head;
-            int prevRank = 0;
+            Node *pre = head;
             Node *cur = head->forward[0];
-            int curRank = 0;
+            pre->forward[i] = cur;
+            pre->span[i] = 1;
+            pre = cur;
+            cur = cur->forward[i - 1];
+            if (cur)
+                cur = cur->forward[i - 1];
+            int stp = 1 << i;
             while (cur)
             {
-                ++curRank;
-                if (cur->level > i)
-                {
-                    prev->forward[i] = cur;
-                    prev->span[i] = curRank - prevRank;
-                    prevRank = curRank;
-                    prev = cur;
-                }
-                cur = cur->forward[0];
+                pre->forward[i] = cur;
+                pre->span[i] = stp;
+                pre = cur;
+                cur = cur->forward[i - 1];
+                if (cur)
+                    cur = cur->forward[i - 1];
             }
         }
 

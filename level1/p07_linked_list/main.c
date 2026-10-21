@@ -105,7 +105,7 @@ int main()
     Node *first = find_first(head, 5, &first_position);
 
     if (first == NULL)
-        puts("-1");
+        printf("-1\n");
     else
         printf("%d\n", first_position);
 
@@ -116,7 +116,7 @@ int main()
         second = find_first(first->next, 5, &second_position);
 
     if (second == NULL)
-        puts("-1");
+        printf("-1\n");
     else
         printf("%d\n", second_position);
 

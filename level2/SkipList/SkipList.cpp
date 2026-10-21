@@ -2,9 +2,9 @@
 using namespace std;
 
 int MAX_LEVEL;
-int seed = 114514;
+uint32_t seed = 114514;
 
-unsigned nextRandom()
+uint32_t nextRandom()
 {
     seed ^= seed << 13;
     seed ^= seed >> 17;
@@ -57,8 +57,8 @@ private:
 
     static int randomLevel()
     {
-        unsigned int r = nextRandom();
-        if (r == 0xFFFFFFFFu)
+        uint32_t r = nextRandom();
+        if (r == UINT32_MAX)
             return MAX_LEVEL;
         int zeros = __builtin_ctz(~r);
         return zeros >= MAX_LEVEL - 1 ? MAX_LEVEL : zeros + 1;
@@ -100,9 +100,7 @@ public:
         for (int i = 0; i < n; ++i)
         {
             if (i == 0)
-            {
                 nodeLevels[i] = level;
-            }
             else
             {
                 int k = __builtin_ctz(static_cast<unsigned int>(i)) + 1;
@@ -114,11 +112,8 @@ public:
         for (int i = 0; i < n; ++i)
             nodes[i] = new Node(values[i], nodeLevels[i]);
 
-        for (int i = 0; i < MAX_LEVEL; ++i)
-        {
-            head->forward[i] = nullptr;
-            head->span[i] = 0;
-        }
+        fill_n(head->forward, MAX_LEVEL, nullptr);
+        fill_n(head->span, MAX_LEVEL, 0);
 
         head->forward[0] = nodes[0];
         for (int i = 0; i < n; ++i)
@@ -138,6 +133,7 @@ public:
             cur = cur->forward[i - 1];
             if (cur)
                 cur = cur->forward[i - 1];
+
             int stp = 1 << i;
             while (cur)
             {
@@ -189,7 +185,8 @@ public:
         {
             newNode->forward[i] = update[i]->forward[i];
             if (update[i]->forward[i])
-                newNode->span[i] = update[i]->span[i] - (ranks[0] - ranks[i]);
+                newNode->span[i] =
+                    update[i]->span[i] - (ranks[0] - ranks[i]);
             else
                 newNode->span[i] = 0;
 
@@ -294,38 +291,94 @@ public:
 
 namespace
 {
-int readInt()
+bool readInt(int &x)
 {
-    int x = 0;
     int c = getchar();
-    while (c < '0' || c > '9')
+
+    while (c != EOF && isspace(c))
         c = getchar();
-    while (c >= '0' && c <= '9')
+
+    if (c == EOF)
+        return false;
+
+    int sign = 1;
+    if (c == '-' || c == '+')
     {
-        x = x * 10 + (c - '0');
+        if (c == '-')
+            sign = -1;
         c = getchar();
     }
-    return x;
+
+    if (c < '0' || c > '9')
+    {
+        while (c != EOF && !isspace(c))
+            c = getchar();
+        return false;
+    }
+
+    long long value = 0;
+    bool invalid = false;
+
+    while (c >= '0' && c <= '9')
+    {
+        value = value * 10 + c - '0';
+
+        if (value > (long long)INT_MAX + 1)
+            invalid = true;
+
+        c = getchar();
+    }
+
+    if (c != EOF && !isspace(c))
+    {
+        invalid = true;
+        while (c != EOF && !isspace(c))
+            c = getchar();
+    }
+
+    if (invalid)
+        return false;
+
+    value *= sign;
+
+    if (value < INT_MIN || value > INT_MAX)
+        return false;
+
+    x = (int)value;
+    return true;
 }
 }
 
 int main()
 {
-    int n = readInt();
-    int m = readInt();
-    MAX_LEVEL = __lg(n + m) + 2;
+    int n, m;
+
+    if (!readInt(n) || !readInt(m) || n < 0 || m < 0)
+        return 0;
+
+    MAX_LEVEL = __lg(max(1, n + m)) + 2;
+
     SkipList sl;
+
     int *values = new int[n];
     for (int i = 0; i < n; ++i)
-        values[i] = readInt();
+    {
+        if (!readInt(values[i]))
+        {
+            delete[] values;
+            return 0;
+        }
+    }
 
     sl.build(values, n);
     delete[] values;
 
     while (m--)
     {
-        int opt = readInt();
-        int x = readInt();
+        int opt, x;
+
+        if (!readInt(opt) || !readInt(x))
+            return 0;
 
         switch (opt)
         {
@@ -351,5 +404,6 @@ int main()
             break;
         }
     }
+
     return 0;
 }

@@ -2,30 +2,41 @@
 #include <string.h>
 #include <windows.h>
 #include <limits.h>
+
 #define MAX_ITEM_TYPES 105
 #define MAX_ID_LENGTH 105
 #define MAX_PATH_LENGTH 260
+
 static int menu_choice, item_count;
 static double price_temp;
 static char input_buffer[MAX_ID_LENGTH];
+
 typedef struct
 {
     char id[MAX_ID_LENGTH];
     int quantity;
     double price;
 } Item;
+
 static Item items[MAX_ITEM_TYPES];
+
+static int find_item(const char *id);
+
 static void get_path(char *path, const char *name)
 {
     DWORD length = GetModuleFileNameA(NULL, path, MAX_PATH_LENGTH);
+
     if (length == 0 || length >= MAX_PATH_LENGTH)
     {
         path[0] = '\0';
         return;
     }
+
     char *last_slash = strrchr(path, '\\');
+
     if (last_slash != NULL)
         *(last_slash + 1) = '\0';
+
     sprintf(path + strlen(path), "%s", name);
 }
 
@@ -39,6 +50,13 @@ static void load_items()
 {
     char file_path[MAX_PATH_LENGTH];
     get_path(file_path, "goods.txt");
+
+    if (file_path[0] == '\0')
+    {
+        printf("文件路径错误！\n");
+        return;
+    }
+
     FILE *file = fopen(file_path, "r");
 
     if (file == NULL)
@@ -48,10 +66,18 @@ static void load_items()
     }
 
     while (item_count < MAX_ITEM_TYPES - 1 &&
-           fscanf(file, "%103s %lf %d", input_buffer, &price_temp, &menu_choice) == 3)
+           fscanf(file, "%104s %lf %d",
+                  input_buffer, &price_temp, &menu_choice) == 3)
     {
         if (price_temp <= 0 || menu_choice < 0)
             continue;
+
+        if (find_item(input_buffer) != -1)
+        {
+            printf("发现重复商品型号 %s，已跳过重复记录！\n",
+                   input_buffer);
+            continue;
+        }
 
         ++item_count;
         strcpy(items[item_count].id, input_buffer);
@@ -98,15 +124,9 @@ static void add_stock()
 {
     printf("\n========== 入库 ==========\n");
 
-    if (item_count >= MAX_ITEM_TYPES - 1)
-    {
-        printf("商品种类已达到上限！\n");
-        return;
-    }
-
     printf("请输入商品型号：");
 
-    if (scanf("%103s", input_buffer) != 1)
+    if (scanf("%104s", input_buffer) != 1)
     {
         if (feof(stdin))
             return;
@@ -117,13 +137,16 @@ static void add_stock()
     }
 
     int position = find_item(input_buffer);
+    long long temp_quantity;
 
     if (position == -1)
     {
-        ++item_count;
-        strcpy(items[item_count].id, input_buffer);
+        if (item_count >= MAX_ITEM_TYPES - 1)
+        {
+            printf("商品种类已达到上限！\n");
+            return;
+        }
 
-        long long temp_quantity;
         while (1)
         {
             printf("请输入商品数量：\n");
@@ -143,13 +166,15 @@ static void add_stock()
 
             printf("商品数量必须大于0且不超过%d！\n", INT_MAX);
         }
-        items[item_count].quantity = (int)temp_quantity;
+
+        int new_quantity = (int)temp_quantity;
+        double new_price;
 
         while (1)
         {
             printf("请输入商品价格：\n");
 
-            if (scanf("%lf", &items[item_count].price) != 1)
+            if (scanf("%lf", &new_price) != 1)
             {
                 if (feof(stdin))
                     return;
@@ -159,17 +184,21 @@ static void add_stock()
                 continue;
             }
 
-            if (items[item_count].price > 0)
+            if (new_price > 0)
                 break;
 
             printf("商品价格必须大于0！\n");
         }
+
+        ++item_count;
+        strcpy(items[item_count].id, input_buffer);
+        items[item_count].quantity = new_quantity;
+        items[item_count].price = new_price;
     }
     else
     {
         printf("当前库存：%d\n", items[position].quantity);
 
-        long long temp_quantity;
         while (1)
         {
             printf("请输入商品入库数量：\n");
@@ -212,7 +241,7 @@ static void remove_stock()
     {
         printf("请输入商品型号：");
 
-        if (scanf("%103s", input_buffer) != 1)
+        if (scanf("%104s", input_buffer) != 1)
         {
             if (feof(stdin))
                 return;
@@ -233,6 +262,7 @@ static void remove_stock()
     printf("当前库存：%d\n", items[position].quantity);
 
     long long temp_quantity;
+
     while (1)
     {
         printf("请输入商品出库数量：\n");
@@ -247,7 +277,8 @@ static void remove_stock()
             continue;
         }
 
-        if (temp_quantity > 0 && temp_quantity <= items[position].quantity)
+        if (temp_quantity > 0 &&
+            temp_quantity <= items[position].quantity)
             break;
 
         printf("出库数量必须大于0且不能超过当前库存！\n");
@@ -255,13 +286,31 @@ static void remove_stock()
 
     items[position].quantity -= (int)temp_quantity;
 
-    printf("已出库\n");
+    if (items[position].quantity == 0)
+    {
+        for (int i = position; i < item_count; ++i)
+            items[i] = items[i + 1];
+
+        --item_count;
+        printf("商品库存为0，已删除该商品！\n");
+    }
+    else
+    {
+        printf("已出库\n");
+    }
 }
 
 static void save_items()
 {
     char file_path[MAX_PATH_LENGTH];
     get_path(file_path, "goods.txt");
+
+    if (file_path[0] == '\0')
+    {
+        printf("文件路径错误，数据保存失败！\n");
+        return;
+    }
+
     FILE *file = fopen(file_path, "w");
 
     if (file == NULL)
@@ -271,10 +320,41 @@ static void save_items()
     }
 
     for (int i = 1; i <= item_count; ++i)
-        fprintf(file, "%s %.2f %d\n",
-                items[i].id, items[i].price, items[i].quantity);
+    {
+        int repeated = 0;
 
-    fclose(file);
+        for (int j = 1; j < i; ++j)
+            if (strcmp(items[i].id, items[j].id) == 0)
+            {
+                repeated = 1;
+                break;
+            }
+
+        if (repeated)
+        {
+            printf("发现重复商品型号 %s，已跳过重复存档！\n",
+                   items[i].id);
+            continue;
+        }
+
+        if (fprintf(file, "%s %.2f %d\n",
+                    items[i].id,
+                    items[i].price,
+                    items[i].quantity) < 0)
+        {
+            printf("数据写入失败！\n");
+            fclose(file);
+            return;
+        }
+    }
+
+    if (fclose(file) != 0)
+    {
+        printf("文件保存失败！\n");
+        return;
+    }
+
+    printf("数据保存成功！\n");
 }
 
 int main()

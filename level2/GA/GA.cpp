@@ -2,143 +2,198 @@
 #include <windows.h>
 using namespace std;
 
-constexpr int POPULATION_SIZE = 2000;
-constexpr int GENE_LENGTH = 100;
-constexpr int ROWS = 20;
-constexpr int COLS = 20;
-constexpr int GENERATIONS = 2000;
+const int N = 20;
+const int POPULATION_SIZE = 2000;
+const int MAX_GENE_LENGTH = N * N;
+const int GENERATIONS = 2000;
 
-static constexpr int direction_x[4] = {1, 0, -1, 0},direction_y[4] = {0, 1, 0, -1};
+int ROWS, COLS, GENE_LENGTH;
+int start_x, start_y, end_x, end_y;
 
-static mt19937 random_engine(time(nullptr));
+int dx[4] = {1, 0, -1, 0};
+int dy[4] = {0, 1, 0, -1};
 
-namespace {
-    struct Individual
-    {
-        int chromosome[GENE_LENGTH];
-        int x, y, fitness;
-    };
+mt19937 rd(time(NULL));
+vector<string> maze;
+
+struct nd
+{
+    int s[MAX_GENE_LENGTH];
+    int x, y, fitness;
+};
+
+nd p[POPULATION_SIZE], np[POPULATION_SIZE];
+
+int dis(int x, int y)
+{
+    return abs(x - end_x) + abs(y - end_y);
 }
 
-static Individual population[POPULATION_SIZE];
-static Individual next_population[POPULATION_SIZE];
-
-static char maze[ROWS][COLS + 1] =
-    {
-        "####################",
-        "#@.................#",
-        "###....###########.#",
-        "#..................#",
-        "#.######....########",
-        "#..................#",
-        "#####....#####.#",
-        "#..................#",
-        "#.########....######",
-        "#..................#",
-        "###.....##########.#",
-        "#..................#",
-        "#.##########....####",
-        "#..................#",
-        "######....########.#",
-        "#..................#",
-        "#.###########...####",
-        "#..................#",
-        "##################.$",
-        "####################"};
-static void print_path(int index)
+bool valid(int x, int y)
 {
-    int current_x = 0;
-    int current_y = 1;
+    return x >= 0 && x < ROWS &&
+           y >= 0 && y < COLS &&
+           maze[x][y] != '#';
+}
 
-    for (int i = 0; i < GENE_LENGTH; ++i)
+bool input_map()
+{
+    cout << "请输入地图行数和列数：\n";
+
+    if (!(cin >> ROWS >> COLS))
     {
-        int next_x = current_x + direction_x[population[index].chromosome[i]];
-        int next_y = current_y + direction_y[population[index].chromosome[i]];
+        cout << "输入错误！\n";
+        return false;
+    }
 
-        if (next_x < 0 || next_x >= ROWS || next_y < 0 || next_y >= COLS || maze[next_x][next_y] == '#')
-            continue;
+    if (ROWS < 1 || ROWS > N || COLS < 1 || COLS > N)
+    {
+        cout << "地图大小错误！行数和列数必须在1~20之间。\n";
+        return false;
+    }
 
-        current_x = next_x;
-        current_y = next_y;
-        maze[current_x][current_y] = '*';
+    maze.resize(ROWS);
+    int sc = 0, ec = 0;
 
-        if (population[index].chromosome[i] == 0)
-            cout << "下 ";
-        else if (population[index].chromosome[i] == 1)
-            cout << "右 ";
-        else if (population[index].chromosome[i] == 2)
-            cout << "上 ";
-        else if (population[index].chromosome[i] == 3)
-            cout << "左 ";
+    cout << "请输入地图（#墙 .路 @起点 $终点）：\n";
 
-        if (current_x == 18 && current_y == 19)
+    for (int i = 0; i < ROWS; ++i)
+    {
+        if (!(cin >> maze[i]) || maze[i].size() != COLS)
         {
-            cout << "到达终点" << endl;
-            for (int row = 0; row < ROWS; ++row)
+            cout << "地图输入错误！每行必须恰好有"
+                 << COLS << "个字符。\n";
+            return false;
+        }
+
+        for (int j = 0; j < COLS; ++j)
+        {
+            char ch = maze[i][j];
+
+            if (ch == '@')
             {
-                for (int col = 0; col < COLS; ++col)
-                {
-                    cout << maze[row][col];
-                }
-                cout << endl;
+                start_x = i;
+                start_y = j;
+                ++sc;
             }
-            return;
+            else if (ch == '$')
+            {
+                end_x = i;
+                end_y = j;
+                ++ec;
+            }
+            else if (ch != '#' && ch != '.')
+            {
+                cout << "地图包含非法字符！\n";
+                return false;
+            }
         }
     }
-    cout << endl;
+
+    if (sc != 1 || ec != 1)
+    {
+        cout << "地图必须有且只有一个起点和一个终点！\n";
+        return false;
+    }
+
+    GENE_LENGTH = ROWS * COLS;
+    return true;
 }
 
-static int manhattan_distance(int x, int y)
+int calc_fitness(nd &a)
 {
-    return abs(x - 18) + abs(y - 19);
-}
-
-static int calculate_fitness(Individual &individual)
-{
-    individual.x = 0;
-    individual.y = 1;
-
+    a.x = start_x;
+    a.y = start_y;
     int fitness = 0;
 
     for (int i = 0; i < GENE_LENGTH; ++i)
     {
-        int next_x = individual.x + direction_x[individual.chromosome[i]];
-        int next_y = individual.y + direction_y[individual.chromosome[i]];
+        int d = a.s[i];
 
-        if (next_x < 0 || next_x >= ROWS || next_y < 0 || next_y >= COLS || maze[next_x][next_y] == '#')
+        if (d < 0 || d >= 4)
         {
             fitness -= 100;
             continue;
         }
 
-        int old_distance = manhattan_distance(individual.x, individual.y);
+        int nx = a.x + dx[d];
+        int ny = a.y + dy[d];
 
-        individual.x = next_x;
-        individual.y = next_y;
-
-        if (maze[next_x][next_y] == '$')
+        if (!valid(nx, ny))
         {
-            return 1000000 + (GENE_LENGTH - i) * 1000;
+            fitness -= 100;
+            continue;
         }
 
-        fitness += old_distance - manhattan_distance(individual.x, individual.y);
+        int old_dis = dis(a.x, a.y);
+
+        a.x = nx;
+        a.y = ny;
+
+        if (a.x == end_x && a.y == end_y)
+            return 1000000 + (GENE_LENGTH - i) * 1000;
+
+        fitness += old_dis - dis(a.x, a.y);
     }
 
-    fitness -= manhattan_distance(individual.x, individual.y);
-
+    fitness -= dis(a.x, a.y);
     return fitness;
 }
 
-static Individual &tournament_select()
+nd &select_one()
 {
-    Individual *first = &population[random_engine() % POPULATION_SIZE];
-    Individual *second = &population[random_engine() % POPULATION_SIZE];
-    Individual *third = &population[random_engine() % POPULATION_SIZE];
+    nd *a = &p[rd() % POPULATION_SIZE];
+    nd *b = &p[rd() % POPULATION_SIZE];
+    nd *c = &p[rd() % POPULATION_SIZE];
 
-    Individual *best = (first->fitness >= second->fitness) ? first : second;
-    best = (best->fitness >= third->fitness) ? best : third;
+    nd *best = a->fitness >= b->fitness ? a : b;
+    best = best->fitness >= c->fitness ? best : c;
 
     return *best;
+}
+
+void print_path(const nd &a)
+{
+    vector<string> result = maze;
+    int x = start_x, y = start_y;
+    int steps = 0;
+
+    for (int i = 0; i < GENE_LENGTH; ++i)
+    {
+        int d = a.s[i];
+
+        if (d < 0 || d >= 4)
+            continue;
+
+        int nx = x + dx[d];
+        int ny = y + dy[d];
+
+        if (!valid(nx, ny))
+            continue;
+
+        x = nx;
+        y = ny;
+        ++steps;
+
+        if (result[x][y] == '.')
+            result[x][y] = '*';
+
+        if (x == end_x && y == end_y)
+        {
+            cout << "找到路径！\n";
+            cout << "路径步数：" << steps << '\n';
+
+            for (int i = 0; i < ROWS; ++i)
+                cout << result[i] << '\n';
+
+            return;
+        }
+    }
+
+    cout << "当前最优个体没有到达终点。\n";
+
+    for (int i = 0; i < ROWS; ++i)
+        cout << result[i] << '\n';
 }
 
 int main()
@@ -146,133 +201,140 @@ int main()
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
 
+    if (!input_map())
+        return 0;
+
+    clock_t start_time = clock();
+
     for (int i = 0; i < POPULATION_SIZE; ++i)
     {
-        int current_x = 0;
-        int current_y = 1;
+        int x = start_x, y = start_y;
 
         for (int j = 0; j < GENE_LENGTH; ++j)
         {
-            int valid_directions[4] = {0};
-            int valid_count = 0;
+            int dir[4], cnt = 0;
 
             for (int k = 0; k < 4; ++k)
             {
-                if (j > 0 && (population[i].chromosome[j - 1] + 2) % 4 == k)
-                    continue;
+                int nx = x + dx[k];
+                int ny = y + dy[k];
 
-                int next_x = current_x + direction_x[k];
-                int next_y = current_y + direction_y[k];
+                if (valid(nx, ny))
+                    dir[cnt++] = k;
+            }
 
-                if (next_x >= 0 && next_x < ROWS && next_y >= 0 && next_y < COLS &&
-                    (maze[next_x][next_y] == '.' || maze[next_x][next_y] == '@'))
+            int d;
+
+            if (cnt == 0)
+                d = rd() % 4;
+            else
+            {
+                d = dir[0];
+
+                for (int k = 1; k < cnt; ++k)
                 {
-                    valid_directions[valid_count++] = k;
+                    int t = dir[k];
+
+                    if (dis(x + dx[t], y + dy[t]) <
+                        dis(x + dx[d], y + dy[d]))
+                        d = t;
                 }
+
+                if (rd() % 100 >= 80)
+                    d = dir[rd() % cnt];
             }
 
-            if (valid_count == 0)
+            p[i].s[j] = d;
+
+            int nx = x + dx[d];
+            int ny = y + dy[d];
+
+            if (valid(nx, ny))
             {
-                population[i].chromosome[j] = static_cast<int>(random_engine() % 4);
-                continue;
+                x = nx;
+                y = ny;
             }
-
-            int best_direction = valid_directions[0];
-
-            for (int k = 1; k < valid_count; ++k)
-            {
-                int next_x = current_x + direction_x[valid_directions[k]];
-                int next_y = current_y + direction_y[valid_directions[k]];
-
-                int best_x = current_x + direction_x[best_direction];
-                int best_y = current_y + direction_y[best_direction];
-
-                if (manhattan_distance(next_x, next_y) < manhattan_distance(best_x, best_y))
-                    best_direction = valid_directions[k];
-            }
-
-            population[i].chromosome[j] = (random_engine() % 100 < 80) ? best_direction : valid_directions[random_engine() % valid_count];
-
-            current_x += direction_x[population[i].chromosome[j]];
-            current_y += direction_y[population[i].chromosome[j]];
         }
     }
 
-    int best_fitness = -1;
-    Individual best_individual;
+    int best_fitness = INT_MIN;
+    nd best{};
 
     for (int generation = 0; generation < GENERATIONS; ++generation)
     {
         for (int i = 0; i < POPULATION_SIZE; ++i)
-            population[i].fitness = calculate_fitness(population[i]);
+            p[i].fitness = calc_fitness(p[i]);
 
-        int best_index = 0;
+        int best_id = 0;
 
         for (int i = 1; i < POPULATION_SIZE; ++i)
         {
-            if (population[i].fitness > population[best_index].fitness)
-                best_index = i;
+            if (p[i].fitness > p[best_id].fitness)
+                best_id = i;
         }
 
-        if (population[best_index].fitness > best_fitness)
+        if (p[best_id].fitness > best_fitness)
         {
-            best_fitness = population[best_index].fitness;
-            best_individual = population[best_index];
+            best_fitness = p[best_id].fitness;
+            best = p[best_id];
         }
 
-        next_population[0] = population[best_index];
+        if (best_fitness >= 1000000)
+            break;
+
+        np[0] = p[best_id];
 
         int mutation_rate = max(1, 5 - generation * 4 / GENERATIONS);
 
         for (int i = 1; i < POPULATION_SIZE; i += 2)
         {
-            Individual &parent1 = tournament_select();
-            Individual &parent2 = tournament_select();
+            nd &a = select_one();
+            nd &b = select_one();
 
-            next_population[i] = parent1;
+            np[i] = a;
 
             if (i + 1 < POPULATION_SIZE)
-                next_population[i + 1] = parent2;
+                np[i + 1] = b;
 
-            int crossover_point = static_cast<int>(random_engine() % GENE_LENGTH);
+            int pos = rd() % GENE_LENGTH;
 
             if (i + 1 < POPULATION_SIZE)
             {
-                for (int j = crossover_point; j < GENE_LENGTH; ++j)
-                {
-                    swap(next_population[i].chromosome[j],
-                         next_population[i + 1].chromosome[j]);
-                }
+                for (int j = pos; j < GENE_LENGTH; ++j)
+                    swap(np[i].s[j], np[i + 1].s[j]);
             }
 
             for (int j = 0; j < GENE_LENGTH; ++j)
             {
-                if (random_engine() % 100 < mutation_rate)
-                {
-                    next_population[i].chromosome[j] = static_cast<int>(random_engine() % 4);
-                }
+                if (rd() % 100 < mutation_rate)
+                    np[i].s[j] = rd() % 4;
 
-                if (i + 1 < POPULATION_SIZE && random_engine() % 100 < mutation_rate)
-                {
-                    next_population[i + 1].chromosome[j] = static_cast<int>(random_engine() % 4);
-                }
+                if (i + 1 < POPULATION_SIZE &&
+                    rd() % 100 < mutation_rate)
+                    np[i + 1].s[j] = rd() % 4;
             }
         }
 
-        swap(population, next_population);
+        for (int i = 0; i < POPULATION_SIZE; ++i)
+            p[i] = np[i];
     }
 
     if (best_fitness >= 1000000)
-    {
-        population[0] = best_individual;
-        int steps = (best_fitness - 1000000) / 1000;
-        cout << "找到路径，共 " << GENE_LENGTH - steps << " 步，路径为：";
-        print_path(0);
-    }
+        print_path(best);
     else
     {
-        printf("未找到路径\n");
+        cout << "未找到路径，可以尝试调整种群或迭代次数。\n";
+
+        cout << "当前最优路线：\n";
+        print_path(best);
     }
+
+    clock_t end_time = clock();
+
+    cout << fixed << setprecision(3);
+    cout << "运行时间："
+         << (double)(end_time - start_time) / CLOCKS_PER_SEC
+         << " 秒\n";
 
     return 0;
 }

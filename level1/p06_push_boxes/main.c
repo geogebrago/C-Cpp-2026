@@ -17,13 +17,30 @@ static int direction_x[5] = {0, 1, -1, 0, 0};
 static int direction_y[5] = {0, 0, 0, 1, -1};
 static char grid[MAX_SIZE][MAX_SIZE];
 static char base_path[MAX_SIZE];
+static char source_path[MAX_SIZE];
 
-static void get_path(char *path, const char *name)
+static int get_path(char *path, const char *name)
 {
+    int len;
+
     if (base_path[0] == '\0')
-        snprintf(path, MAX_SIZE, "%s", name);
+        len = snprintf(path, MAX_SIZE, "%s", name);
     else
-        snprintf(path, MAX_SIZE, "%s\\%s", base_path, name);
+        len = snprintf(path, MAX_SIZE, "%s\\%s", base_path, name);
+
+    return len >= 0 && len < MAX_SIZE;
+}
+
+static int get_score_path(char *path, const char *name)
+{
+    int len;
+
+    if (source_path[0] == '\0')
+        len = snprintf(path, MAX_SIZE, "%s", name);
+    else
+        len = snprintf(path, MAX_SIZE, "%s\\%s", source_path, name);
+
+    return len >= 0 && len < MAX_SIZE;
 }
 
 static int is_inside(int x, int y)
@@ -67,6 +84,9 @@ static int check_map(void)
                 ++count_box;
             else if (grid[i][j] != '#' && grid[i][j] != ' ')
                 return 0;
+
+            if (count_target >= MAX_SIZE || count_box >= MAX_SIZE)
+                return 0;
         }
     }
 
@@ -82,20 +102,20 @@ static int load_level_file(const char *file)
 
     if (fp == NULL)
     {
-        printf("文件打开失败\n");
+        printf("文件打开失败: %s\n", file);
         return 0;
     }
 
     memset(grid, ' ', sizeof(grid));
-
     rows = 0;
     cols = 0;
 
-    char line[MAX_SIZE];
+    char line[MAX_SIZE + 2];
 
-    while (fgets(line, MAX_SIZE, fp) != NULL)
+    while (fgets(line, sizeof(line), fp) != NULL)
     {
         int len = (int)strlen(line);
+        int has_newline = len > 0 && line[len - 1] == '\n';
 
         while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r'))
             line[--len] = '\0';
@@ -105,26 +125,39 @@ static int load_level_file(const char *file)
             (unsigned char)line[1] == 0xBB &&
             (unsigned char)line[2] == 0xBF)
         {
-            memmove(line, line + 3, len - 3);
+            memmove(line, line + 3, len - 2);
             len -= 3;
         }
 
         if (len == 0)
             continue;
 
-        ++rows;
-
-        if (rows >= MAX_SIZE || len >= MAX_SIZE)
+        if (len >= MAX_SIZE || rows + 1 >= MAX_SIZE)
         {
             fclose(fp);
-            printf("地图太大\n");
+            printf("地图太大，行数和列数最多为%d。\n", MAX_SIZE - 1);
             return 0;
         }
 
+        if (!has_newline && !feof(fp))
+        {
+            fclose(fp);
+            printf("地图某一行过长或文件格式错误。\n");
+            return 0;
+        }
+
+        ++rows;
         cols = MAX(cols, len);
 
         for (int j = 1; j <= len; ++j)
             grid[rows][j] = line[j - 1];
+    }
+
+    if (ferror(fp))
+    {
+        fclose(fp);
+        printf("读取地图文件失败。\n");
+        return 0;
     }
 
     fclose(fp);
@@ -137,7 +170,7 @@ static int load_level_file(const char *file)
 
     if (!check_map())
     {
-        printf("地图格式错误\n");
+        printf("地图格式错误：请检查字符、玩家数量、箱子和目标数量及容量。\n");
         return 0;
     }
 
@@ -297,28 +330,73 @@ static void save_score(void)
     if (scores[level] == 0 || steps < scores[level])
         scores[level] = steps;
 
-    char file[MAX_SIZE];
-    get_path(file, "score.txt");
-    FILE *fp = fopen(file, "w");
+    char file[MAX_SIZE], temp_file[MAX_SIZE];
+
+    if (!get_score_path(file, "score.txt") ||
+        !get_score_path(temp_file, "score.tmp"))
+    {
+        printf("成绩文件路径过长，无法保存。\n");
+        return;
+    }
+
+    FILE *fp = fopen(temp_file, "w");
 
     if (fp == NULL)
+    {
+        printf("无法创建成绩临时文件，保存失败。\n");
         return;
+    }
+
+    int ok = 1;
 
     for (int i = 1; i <= 3; ++i)
-        fprintf(fp, "%d\n", scores[i]);
+    {
+        if (fprintf(fp, "%d\n", scores[i]) < 0)
+        {
+            ok = 0;
+            break;
+        }
+    }
 
-    fclose(fp);
+    if (fclose(fp) != 0)
+        ok = 0;
+
+    if (!ok)
+    {
+        remove(temp_file);
+        printf("写入成绩失败。\n");
+        return;
+    }
+
+    if (!MoveFileExA(temp_file, file,
+                     MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
+    {
+        remove(temp_file);
+        printf("保存成绩失败，错误代码：%lu\n", GetLastError());
+        return;
+    }
+
+    printf("成绩已保存。\n");
 }
 
 static int load_game_level(void)
 {
     char file[MAX_SIZE];
+    int path_ok;
+
     if (level == 1)
-        get_path(file, "yi.txt");
+        path_ok = get_path(file, "yi.txt");
     else if (level == 2)
-        get_path(file, "er.txt");
+        path_ok = get_path(file, "er.txt");
     else
-        get_path(file, "san.txt");
+        path_ok = get_path(file, "san.txt");
+
+    if (!path_ok)
+    {
+        printf("地图文件路径过长。\n");
+        _getch();
+        return 0;
+    }
 
     if (!load_level_file(file))
     {
@@ -365,7 +443,14 @@ static void play_level(void)
 static void load_scores(void)
 {
     char file[MAX_SIZE];
-    get_path(file, "score.txt");
+
+    if (!get_score_path(file, "score.txt"))
+    {
+        for (int i = 1; i <= 3; ++i)
+            scores[i] = 0;
+        return;
+    }
+
     FILE *fp = fopen(file, "r");
 
     if (fp == NULL)
@@ -377,7 +462,7 @@ static void load_scores(void)
 
     for (int i = 1; i <= 3; ++i)
     {
-        if (fscanf(fp, "%d", &scores[i]) != 1)
+        if (fscanf(fp, "%d", &scores[i]) != 1 || scores[i] < 0)
             scores[i] = 0;
     }
 
@@ -472,6 +557,25 @@ int main(void)
             *last_slash = '\0';
     }
 
+    DWORD source_length = GetFullPathNameA(__FILE__, MAX_SIZE, source_path, NULL);
+    if (source_length == 0 || source_length >= MAX_SIZE)
+    {
+        source_path[0] = '\0';
+    }
+    else
+    {
+        char *last_slash = strrchr(source_path, '\\');
+        char *last_forward_slash = strrchr(source_path, '/');
+        if (last_forward_slash != NULL &&
+            (last_slash == NULL || last_forward_slash > last_slash))
+            last_slash = last_forward_slash;
+
+        if (last_slash != NULL)
+            *last_slash = '\0';
+        else
+            source_path[0] = '\0';
+    }
+
     load_scores();
 
     while (1)
@@ -479,3 +583,4 @@ int main(void)
 
     return 0;
 }
+

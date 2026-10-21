@@ -2,14 +2,14 @@
 using namespace std;
 
 template<typename T>
-class dnager_array
+class safe_array
 {
 private:
     T *a;
     int n;
 
 public:
-    dnager_array(int sz)
+    safe_array(int sz)
     {
         if (sz<=0)
         {
@@ -22,17 +22,17 @@ public:
         a=new T[n];
     }
 
-    ~dnager_array()
+    ~safe_array()
     {
         delete[] a;
     }
-    dnager_array(const dnager_array &)=delete;
-    dnager_array &operator=(const dnager_array &)=delete;
+    safe_array(const safe_array &)=delete;
+    safe_array &operator=(const safe_array &)=delete;
     T &operator[](int i)
     {
         if (i<0||i>=n)
         {
-            printf("下标越界\n");
+            cout<<"下标越界"<<endl;
             exit(1);
         }
 
@@ -42,13 +42,13 @@ public:
 
 int main()
 {
-    dnager_array<int> a(3);
+    safe_array<int> a(3);
     a[0]=114514;
     a[1]=1919810;
 
-    printf("%d %d\n",a[0],a[1]);
+    cout<<a[0]<<" "<<a[1]<<endl;
 
-    dnager_array<bool> b(3);
+    safe_array<bool> b(3);
 
     b[0]=true;
     b[1]=false;

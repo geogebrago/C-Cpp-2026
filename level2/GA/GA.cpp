@@ -1,4 +1,5 @@
-﻿#include <bits/stdc++.h>
+﻿
+#include <bits/stdc++.h>
 #include <windows.h>
 using namespace std;
 
@@ -46,7 +47,8 @@ bool input_map()
         return false;
     }
 
-    if (ROWS < 1 || ROWS > N || COLS < 1 || COLS > N)
+    if (ROWS < 1 || ROWS > N ||
+        COLS < 1 || COLS > N)
     {
         cout << "地图大小错误！行数和列数必须在1~20之间。\n";
         return false;
@@ -59,7 +61,8 @@ bool input_map()
 
     for (int i = 0; i < ROWS; ++i)
     {
-        if (!(cin >> maze[i]) || maze[i].size() != COLS)
+        if (!(cin >> maze[i]) ||
+            maze[i].size() != COLS)
         {
             cout << "地图输入错误！每行必须恰好有"
                  << COLS << "个字符。\n";
@@ -104,7 +107,9 @@ int calc_fitness(nd &a)
 {
     a.x = start_x;
     a.y = start_y;
+
     int fitness = 0;
+    int last_dir = -1;
 
     for (int i = 0; i < GENE_LENGTH; ++i)
     {
@@ -125,13 +130,19 @@ int calc_fitness(nd &a)
             continue;
         }
 
+        if (last_dir != -1 &&
+            d == (last_dir + 2) % 4)
+            fitness -= 20;
+
         int old_dis = dis(a.x, a.y);
 
         a.x = nx;
         a.y = ny;
+        last_dir = d;
 
         if (a.x == end_x && a.y == end_y)
-            return 1000000 + (GENE_LENGTH - i) * 1000;
+            return 1000000 +
+                   (GENE_LENGTH - i) * 1000 + fitness;
 
         fitness += old_dis - dis(a.x, a.y);
     }
@@ -209,6 +220,7 @@ int main()
     for (int i = 0; i < POPULATION_SIZE; ++i)
     {
         int x = start_x, y = start_y;
+        int last_dir = -1;
 
         for (int j = 0; j < GENE_LENGTH; ++j)
         {
@@ -229,11 +241,23 @@ int main()
                 d = rd() % 4;
             else
             {
-                d = dir[0];
+                int cand[4], num = 0;
 
-                for (int k = 1; k < cnt; ++k)
+                for (int k = 0; k < cnt; ++k)
                 {
-                    int t = dir[k];
+                    if (last_dir != -1 &&
+                        dir[k] == (last_dir + 2) % 4 &&
+                        cnt > 1)
+                        continue;
+
+                    cand[num++] = dir[k];
+                }
+
+                d = cand[0];
+
+                for (int k = 1; k < num; ++k)
+                {
+                    int t = cand[k];
 
                     if (dis(x + dx[t], y + dy[t]) <
                         dis(x + dx[d], y + dy[d]))
@@ -241,7 +265,7 @@ int main()
                 }
 
                 if (rd() % 100 >= 80)
-                    d = dir[rd() % cnt];
+                    d = cand[rd() % num];
             }
 
             p[i].s[j] = d;
@@ -253,6 +277,7 @@ int main()
             {
                 x = nx;
                 y = ny;
+                last_dir = d;
             }
         }
     }
@@ -260,7 +285,8 @@ int main()
     int best_fitness = INT_MIN;
     nd best{};
 
-    for (int generation = 0; generation < GENERATIONS; ++generation)
+    for (int generation = 0;
+         generation < GENERATIONS; ++generation)
     {
         for (int i = 0; i < POPULATION_SIZE; ++i)
             p[i].fitness = calc_fitness(p[i]);
@@ -284,7 +310,8 @@ int main()
 
         np[0] = p[best_id];
 
-        int mutation_rate = max(1, 5 - generation * 4 / GENERATIONS);
+        int mutation_rate =
+            max(1, 5 - generation * 4 / GENERATIONS);
 
         for (int i = 1; i < POPULATION_SIZE; i += 2)
         {
@@ -324,7 +351,6 @@ int main()
     else
     {
         cout << "未找到路径，可以尝试调整种群或迭代次数。\n";
-
         cout << "当前最优路线：\n";
         print_path(best);
     }
@@ -333,7 +359,8 @@ int main()
 
     cout << fixed << setprecision(3);
     cout << "运行时间："
-         << (double)(end_time - start_time) / CLOCKS_PER_SEC
+         << (double)(end_time - start_time) /
+            CLOCKS_PER_SEC
          << " 秒\n";
 
     return 0;

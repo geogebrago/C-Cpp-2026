@@ -14,6 +14,7 @@ add_executable(p03_all_primes  level1/p03_all_primes/main.c)
 add_executable(p04_hanoi  level1/p04_hanoi/main.c)
 
 add_executable(p05_maze level1/p05_maze/main.c
+        level1/p05_maze/main2.c
 )
 
 add_executable(p06_push_boxes level1/p06_push_boxes/main.c
@@ -35,7 +36,8 @@ add_executable(p10_zoo_cpp  level1/p10_zoo_cpp/main.cpp)
 add_compile_options("-utf-8")
 
 add_link_options("-utf-8")
-add_executable(new_target level2/SkipList/SkipList.cpp)
+add_executable(new_target level2/SkipList/SkipList.cpp
+        level1/p05_maze/main2.c)
 
 add_executable(pi level2/PI/pi.cpp)
 if (WIN32)

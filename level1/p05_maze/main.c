@@ -4,17 +4,16 @@
 #include <time.h>
 #include <conio.h>
 #include <windows.h>
+#include "main2.h"
 
-#define MAX_SIZE 1001
-
-static int rows, cols;
+int rows, cols;
 static int current_x, current_y;
-static int end_x, end_y;
-static int player_x, player_y;
+int end_x, end_y;
+int player_x, player_y;
 static int direction_x[5] = {0, 1, -1, 0, 0};
 static int direction_y[5] = {0, 0, 0, 1, -1};
 
-static bool visited[MAX_SIZE][MAX_SIZE];
+bool visited[MAX_SIZE][MAX_SIZE];
 
 typedef struct
 {
@@ -69,25 +68,6 @@ static void add_frontier()
             candidate.direction = i;
             frontier_push(candidate);
         }
-    }
-}
-
-static void print_board()
-{
-    for (int i = 1; i <= rows; ++i)
-    {
-        for (int j = 1; j <= cols; ++j)
-        {
-            if (i == end_x && j == end_y)
-                putchar('$');
-            else if (i == player_x && j == player_y)
-                putchar('@');
-            else if (!visited[i][j])
-                putchar('#');
-            else
-                putchar(' ');
-        }
-        putchar('\n');
     }
 }
 

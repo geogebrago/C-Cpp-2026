@@ -1,5 +1,4 @@
-﻿
-#include <bits/stdc++.h>
+﻿#include <bits/stdc++.h>
 #include <windows.h>
 using namespace std;
 
@@ -9,93 +8,84 @@ const int MAX_GENE_LENGTH = N * N;
 const int GENERATIONS = 2000;
 
 int ROWS, COLS, GENE_LENGTH;
-int start_x, start_y, end_x, end_y;
+int sx, sy, ex, ey;
+char mp[N][N];
 
 int dx[4] = {1, 0, -1, 0};
 int dy[4] = {0, 1, 0, -1};
 
-mt19937 rd(time(NULL));
-vector<string> maze;
+mt19937 rd(time(nullptr));
 
 struct nd
 {
     int s[MAX_GENE_LENGTH];
-    int x, y, fitness;
+    int fitness;
+    int x, y;
 };
 
 nd p[POPULATION_SIZE], np[POPULATION_SIZE];
-
-int dis(int x, int y)
-{
-    return abs(x - end_x) + abs(y - end_y);
-}
 
 bool valid(int x, int y)
 {
     return x >= 0 && x < ROWS &&
            y >= 0 && y < COLS &&
-           maze[x][y] != '#';
+           mp[x][y] != '#';
 }
 
 bool input_map()
 {
-    cout << "请输入地图行数和列数：\n";
-
+    cout << "请输入地图行数和列数（最大 20*20）：";
     if (!(cin >> ROWS >> COLS))
+        return false;
+
+    if (ROWS < 1 || ROWS > N || COLS < 1 || COLS > N)
     {
-        cout << "输入错误！\n";
+        cout << "地图尺寸错误！行数和列数必须在 1~20 之间。\n";
         return false;
     }
 
-    if (ROWS < 1 || ROWS > N ||
-        COLS < 1 || COLS > N)
-    {
-        cout << "地图大小错误！行数和列数必须在1~20之间。\n";
-        return false;
-    }
-
-    maze.resize(ROWS);
     int sc = 0, ec = 0;
 
-    cout << "请输入地图（#墙 .路 @起点 $终点）：\n";
+    cout << "请输入地图（# 为墙，. 为道路，@ 为起点，$ 为终点）：\n";
 
     for (int i = 0; i < ROWS; ++i)
     {
-        if (!(cin >> maze[i]) ||
-            maze[i].size() != COLS)
+        string s;
+        if (!(cin >> s) || (int)s.size() != COLS)
         {
-            cout << "地图输入错误！每行必须恰好有"
-                 << COLS << "个字符。\n";
+            cout << "第 " << i + 1 << " 行长度错误！\n";
             return false;
         }
 
         for (int j = 0; j < COLS; ++j)
         {
-            char ch = maze[i][j];
-
-            if (ch == '@')
+            if (s[j] != '#' && s[j] != '.' &&
+                s[j] != '@' && s[j] != '$')
             {
-                start_x = i;
-                start_y = j;
+                cout << "地图中存在非法字符！\n";
+                return false;
+            }
+
+            mp[i][j] = s[j];
+
+            if (s[j] == '@')
+            {
+                sx = i;
+                sy = j;
                 ++sc;
             }
-            else if (ch == '$')
+            else if (s[j] == '$')
             {
-                end_x = i;
-                end_y = j;
+                ex = i;
+                ey = j;
                 ++ec;
-            }
-            else if (ch != '#' && ch != '.')
-            {
-                cout << "地图包含非法字符！\n";
-                return false;
             }
         }
     }
 
     if (sc != 1 || ec != 1)
     {
-        cout << "地图必须有且只有一个起点和一个终点！\n";
+        cout << "地图必须恰好包含一个起点和一个终点！\n";
         return false;
     }
 
@@ -103,13 +93,35 @@ bool input_map()
     return true;
 }
 
+bool can_move(int x, int y, int d)
+{
+    return valid(x + dx[d], y + dy[d]);
+}
+
+bool has_other_move(int x, int y, int last_dir)
+{
+    if (last_dir == -1)
+        return false;
+
+    int rev = (last_dir + 2) % 4;
+
+    for (int d = 0; d < 4; ++d)
+    {
+        if (d == rev)
+            continue;
+
+        if (can_move(x, y, d))
+            return true;
+    }
+
+    return false;
+}
+
 int calc_fitness(nd &a)
 {
-    a.x = start_x;
-    a.y = start_y;
-
-    int fitness = 0;
+    int x = sx, y = sy;
     int last_dir = -1;
+    int fitness = 0;
 
     for (int i = 0; i < GENE_LENGTH; ++i)
     {
@@ -121,8 +133,8 @@ int calc_fitness(nd &a)
             continue;
         }
 
-        int nx = a.x + dx[d];
-        int ny = a.y + dy[d];
+        int nx = x + dx[d];
+        int ny = y + dy[d];
 
         if (!valid(nx, ny))
         {
@@ -130,44 +142,138 @@ int calc_fitness(nd &a)
             continue;
         }
 
-        if (last_dir != -1 &&
-            d == (last_dir + 2) % 4)
-            fitness -= 20;
+        if (last_dir != -1)
+        {
+            int rev = (last_dir + 2) % 4;
 
-        int old_dis = dis(a.x, a.y);
+            if (d == rev && has_other_move(x, y, last_dir))
+            {
+                fitness -= 20;
+                continue;
+            }
+        }
 
-        a.x = nx;
-        a.y = ny;
+        x = nx;
+        y = ny;
         last_dir = d;
+        fitness += 10;
 
-        if (a.x == end_x && a.y == end_y)
-            return 1000000 +
-                   (GENE_LENGTH - i) * 1000 + fitness;
+        int dis = abs(x - ex) + abs(y - ey);
+        fitness -= dis;
 
-        fitness += old_dis - dis(a.x, a.y);
+        if (x == ex && y == ey)
+        {
+            a.x = x;
+            a.y = y;
+            a.fitness = 1000000 + (GENE_LENGTH - i) * 1000 + fitness;
+            return a.fitness;
+        }
     }
 
-    fitness -= dis(a.x, a.y);
+    a.x = x;
+    a.y = y;
+    a.fitness = fitness;
     return fitness;
 }
 
-nd &select_one()
+int select_one()
 {
-    nd *a = &p[rd() % POPULATION_SIZE];
-    nd *b = &p[rd() % POPULATION_SIZE];
-    nd *c = &p[rd() % POPULATION_SIZE];
+    int best = rd() % POPULATION_SIZE;
 
-    nd *best = a->fitness >= b->fitness ? a : b;
-    best = best->fitness >= c->fitness ? best : c;
+    for (int i = 1; i < 3; ++i)
+    {
+        int id = rd() % POPULATION_SIZE;
 
-    return *best;
+        if (p[id].fitness > p[best].fitness)
+            best = id;
+    }
+
+    return best;
 }
 
-void print_path(const nd &a)
+void init_one(nd &a)
 {
-    vector<string> result = maze;
-    int x = start_x, y = start_y;
+    int x = sx, y = sy;
+    int last_dir = -1;
+
+    for (int i = 0; i < GENE_LENGTH; ++i)
+    {
+        int cand[4], cnt = 0;
+
+        int rev = -1;
+        if (last_dir != -1)
+            rev = (last_dir + 2) % 4;
+
+        bool other = has_other_move(x, y, last_dir);
+
+        for (int d = 0; d < 4; ++d)
+        {
+            if (!can_move(x, y, d))
+                continue;
+
+            if (other && d == rev)
+                continue;
+
+            cand[cnt++] = d;
+        }
+
+        if (cnt == 0)
+        {
+            a.s[i] = rd() % 4;
+            continue;
+        }
+
+        int best[4], best_cnt = 0;
+        int mindis = INT_MAX;
+
+        for (int j = 0; j < cnt; ++j)
+        {
+            int d = cand[j];
+            int nx = x + dx[d];
+            int ny = y + dy[d];
+            int dis = abs(nx - ex) + abs(ny - ey);
+
+            if (dis < mindis)
+            {
+                mindis = dis;
+                best_cnt = 0;
+                best[best_cnt++] = d;
+            }
+            else if (dis == mindis)
+            {
+                best[best_cnt++] = d;
+            }
+        }
+
+        int d;
+
+        if (rd() % 100 < 70)
+            d = best[rd() % best_cnt];
+        else
+            d = cand[rd() % cnt];
+
+        a.s[i] = d;
+        x += dx[d];
+        y += dy[d];
+        last_dir = d;
+    }
+
+    a.fitness = 0;
+}
+
+void print_path(nd &a)
+{
+    char out[N][N];
+
+    for (int i = 0; i < ROWS; ++i)
+        for (int j = 0; j < COLS; ++j)
+            out[i][j] = mp[i][j];
+
+    int x = sx, y = sy;
+    int last_dir = -1;
     int steps = 0;
+
+    out[x][y] = '@';
 
     for (int i = 0; i < GENE_LENGTH; ++i)
     {
@@ -182,29 +288,44 @@ void print_path(const nd &a)
         if (!valid(nx, ny))
             continue;
 
+        if (last_dir != -1)
+        {
+            int rev = (last_dir + 2) % 4;
+
+            if (d == rev && has_other_move(x, y, last_dir))
+                continue;
+        }
+
         x = nx;
         y = ny;
+        last_dir = d;
         ++steps;
 
-        if (result[x][y] == '.')
-            result[x][y] = '*';
+        if (out[x][y] == '.')
+            out[x][y] = '*';
 
-        if (x == end_x && y == end_y)
-        {
-            cout << "找到路径！\n";
-            cout << "路径步数：" << steps << '\n';
-
-            for (int i = 0; i < ROWS; ++i)
-                cout << result[i] << '\n';
-
-            return;
-        }
+        if (x == ex && y == ey)
+            break;
     }
 
-    cout << "当前最优个体没有到达终点。\n";
+    out[sx][sy] = '@';
+    out[ex][ey] = '$';
+
+    cout << "\n寻路结果：\n";
 
     for (int i = 0; i < ROWS; ++i)
-        cout << result[i] << '\n';
+    {
+        for (int j = 0; j < COLS; ++j)
+            cout << out[i][j];
+        cout << '\n';
+    }
+
+    cout << "实际移动步数：" << steps << '\n';
+
+    if (x == ex && y == ey)
+        cout << "成功到达终点！\n";
+    else
+        cout << "本次未能到达终点。\n";
 }
 
 int main()
@@ -215,83 +336,17 @@ int main()
     if (!input_map())
         return 0;
 
-    clock_t start_time = clock();
-
     for (int i = 0; i < POPULATION_SIZE; ++i)
     {
-        int x = start_x, y = start_y;
-        int last_dir = -1;
-
-        for (int j = 0; j < GENE_LENGTH; ++j)
-        {
-            int dir[4], cnt = 0;
-
-            for (int k = 0; k < 4; ++k)
-            {
-                int nx = x + dx[k];
-                int ny = y + dy[k];
-
-                if (valid(nx, ny))
-                    dir[cnt++] = k;
-            }
-
-            int d;
-
-            if (cnt == 0)
-                d = rd() % 4;
-            else
-            {
-                int cand[4], num = 0;
-
-                for (int k = 0; k < cnt; ++k)
-                {
-                    if (last_dir != -1 &&
-                        dir[k] == (last_dir + 2) % 4 &&
-                        cnt > 1)
-                        continue;
-
-                    cand[num++] = dir[k];
-                }
-
-                d = cand[0];
-
-                for (int k = 1; k < num; ++k)
-                {
-                    int t = cand[k];
-
-                    if (dis(x + dx[t], y + dy[t]) <
-                        dis(x + dx[d], y + dy[d]))
-                        d = t;
-                }
-
-                if (rd() % 100 >= 80)
-                    d = cand[rd() % num];
-            }
-
-            p[i].s[j] = d;
-
-            int nx = x + dx[d];
-            int ny = y + dy[d];
-
-            if (valid(nx, ny))
-            {
-                x = nx;
-                y = ny;
-                last_dir = d;
-            }
-        }
+        init_one(p[i]);
+        calc_fitness(p[i]);
     }
 
-    int best_fitness = INT_MIN;
-    nd best{};
+    int best_id = 0;
 
-    for (int generation = 0;
-         generation < GENERATIONS; ++generation)
+    for (int gen = 0; gen < GENERATIONS; ++gen)
     {
-        for (int i = 0; i < POPULATION_SIZE; ++i)
-            p[i].fitness = calc_fitness(p[i]);
-
-        int best_id = 0;
+        best_id = 0;
 
         for (int i = 1; i < POPULATION_SIZE; ++i)
         {
@@ -299,36 +354,36 @@ int main()
                 best_id = i;
         }
 
-        if (p[best_id].fitness > best_fitness)
+        if (gen % 50 == 0 || p[best_id].fitness >= 1000000)
         {
-            best_fitness = p[best_id].fitness;
-            best = p[best_id];
+            cout << "第 " << gen
+                 << " 代，最高适应度："
+                 << p[best_id].fitness << '\n';
         }
 
-        if (best_fitness >= 1000000)
+        if (p[best_id].fitness >= 1000000)
             break;
 
         np[0] = p[best_id];
 
-        int mutation_rate =
-            max(1, 5 - generation * 4 / GENERATIONS);
+        int mutation_rate = max(1, 5 - gen * 4 / GENERATIONS);
 
         for (int i = 1; i < POPULATION_SIZE; i += 2)
         {
-            nd &a = select_one();
-            nd &b = select_one();
+            int a = select_one();
+            int b = select_one();
 
-            np[i] = a;
-
-            if (i + 1 < POPULATION_SIZE)
-                np[i + 1] = b;
-
-            int pos = rd() % GENE_LENGTH;
+            np[i] = p[a];
 
             if (i + 1 < POPULATION_SIZE)
+                np[i + 1] = p[b];
+
+            if (GENE_LENGTH > 1 && rd() % 100 < 80)
             {
+                int pos = rd() % (GENE_LENGTH - 1) + 1;
+
                 for (int j = pos; j < GENE_LENGTH; ++j)
-                    swap(np[i].s[j], np[i + 1].s[j]);
+                    swap(np[i].s[j], np[i + 1 < POPULATION_SIZE ? i + 1 : i].s[j]);
             }
 
             for (int j = 0; j < GENE_LENGTH; ++j)
@@ -343,25 +398,22 @@ int main()
         }
 
         for (int i = 0; i < POPULATION_SIZE; ++i)
+            calc_fitness(np[i]);
+
+        for (int i = 0; i < POPULATION_SIZE; ++i)
             p[i] = np[i];
     }
 
-    if (best_fitness >= 1000000)
-        print_path(best);
-    else
+    best_id = 0;
+
+    for (int i = 1; i < POPULATION_SIZE; ++i)
     {
-        cout << "未找到路径，可以尝试调整种群或迭代次数。\n";
-        cout << "当前最优路线：\n";
-        print_path(best);
+        if (p[i].fitness > p[best_id].fitness)
+            best_id = i;
     }
 
-    clock_t end_time = clock();
-
-    cout << fixed << setprecision(3);
-    cout << "运行时间："
-         << (double)(end_time - start_time) /
-            CLOCKS_PER_SEC
-         << " 秒\n";
+    cout << "\n最终最高适应度：" << p[best_id].fitness << '\n';
+    print_path(p[best_id]);
 
     return 0;
 }

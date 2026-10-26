@@ -24,7 +24,9 @@ static int find_item(const char *id);
 
 static void get_path(char *path, const char *name)
 {
-    DWORD length = GetModuleFileNameA(NULL, path, MAX_PATH_LENGTH);
+    char source_path[MAX_PATH_LENGTH];
+    DWORD length = GetFullPathNameA(__FILE__, MAX_PATH_LENGTH,
+                                    source_path, NULL);
 
     if (length == 0 || length >= MAX_PATH_LENGTH)
     {
@@ -32,12 +34,26 @@ static void get_path(char *path, const char *name)
         return;
     }
 
-    char *last_slash = strrchr(path, '\\');
+    char *last_slash = strrchr(source_path, '\\');
+    char *last_forward_slash = strrchr(source_path, '/');
 
-    if (last_slash != NULL)
-        *(last_slash + 1) = '\0';
+    if (last_slash == NULL ||
+        (last_forward_slash != NULL && last_forward_slash > last_slash))
+        last_slash = last_forward_slash;
 
-    sprintf(path + strlen(path), "%s", name);
+    if (last_slash == NULL)
+    {
+        path[0] = '\0';
+        return;
+    }
+
+    *(last_slash + 1) = '\0';
+
+    int written = snprintf(path, MAX_PATH_LENGTH, "%s%s",
+                           source_path, name);
+
+    if (written < 0 || written >= MAX_PATH_LENGTH)
+        path[0] = '\0';
 }
 
 static void clear_input()

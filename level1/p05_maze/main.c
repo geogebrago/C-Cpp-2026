@@ -88,13 +88,13 @@ static void handle_input()
     else if (ch == 224)
     {
         ch = _getch();
-        if (ch == 72)
+        if (ch == 72)//上
             d = 2;
-        else if (ch == 80)
+        else if (ch == 80)//下
             d = 1;
-        else if (ch == 75)
+        else if (ch == 75)//左
             d = 4;
-        else if (ch == 77)
+        else if (ch == 77)//右
             d = 3;
     }
 

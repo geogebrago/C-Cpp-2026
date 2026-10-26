@@ -16,19 +16,24 @@ static int scores[4];
 static int direction_x[5] = {0, 1, -1, 0, 0};
 static int direction_y[5] = {0, 0, 0, 1, -1};
 static char grid[MAX_SIZE][MAX_SIZE];
-static char base_path[MAX_SIZE];
 static char source_path[MAX_SIZE];
 
 static int get_path(char *path, const char *name)
 {
+    char temp[MAX_SIZE];
     int len;
 
-    if (base_path[0] == '\0')
-        len = snprintf(path, MAX_SIZE, "%s", name);
+    if (source_path[0] == '\0')
+        len = snprintf(temp, MAX_SIZE, "%s", name);
     else
-        len = snprintf(path, MAX_SIZE, "%s\\%s", base_path, name);
+        len = snprintf(temp, MAX_SIZE, "%s\\%s", source_path, name);
 
-    return len >= 0 && len < MAX_SIZE;
+    if (len < 0 || len >= MAX_SIZE)
+        return 0;
+
+    DWORD path_length = GetFullPathNameA(temp, MAX_SIZE, path, NULL);
+
+    return path_length > 0 && path_length < MAX_SIZE;
 }
 
 static int get_score_path(char *path, const char *name)
@@ -545,18 +550,6 @@ int main(void)
 {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
-    DWORD length = GetModuleFileNameA(NULL, base_path, MAX_SIZE);
-    if (length == 0 || length >= MAX_SIZE)
-    {
-        base_path[0] = '\0';
-    }
-    else
-    {
-        char *last_slash = strrchr(base_path, '\\');
-        if (last_slash != NULL)
-            *last_slash = '\0';
-    }
-
     DWORD source_length = GetFullPathNameA(__FILE__, MAX_SIZE, source_path, NULL);
     if (source_length == 0 || source_length >= MAX_SIZE)
     {
@@ -575,7 +568,6 @@ int main(void)
         else
             source_path[0] = '\0';
     }
-
     load_scores();
 
     while (1)
@@ -583,4 +575,3 @@ int main(void)
 
     return 0;
 }
-

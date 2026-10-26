@@ -30,6 +30,7 @@ add_compile_options("-utf-8")
 
 add_link_options("-utf-8")
 add_executable(Skiplist_cpp level2/SkipList/SkipList.cpp)
+add_executable(NeuralNetwork level2/NeuralNetworks/NeuralNetwork.cpp)
 
 add_executable(pi level2/PI/pi.cpp)
 if (WIN32)

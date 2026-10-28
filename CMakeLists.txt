@@ -30,7 +30,10 @@ add_compile_options("-utf-8")
 
 add_link_options("-utf-8")
 add_executable(Skiplist_cpp level2/SkipList/SkipList.cpp)
-add_executable(NeuralNetwork level2/NeuralNetworks/NeuralNetwork.cpp)
+add_executable(NeuralNetwork level2/NeuralNetworks/NeturalNetwork.cpp)
+configure_file(level2/NeuralNetworks/train.txt ${CMAKE_CURRENT_BINARY_DIR}/train.txt COPYONLY)
+configure_file(level2/NeuralNetworks/test.txt ${CMAKE_CURRENT_BINARY_DIR}/test.txt COPYONLY)
+configure_file(level2/NeuralNetworks/weights88.txt ${CMAKE_CURRENT_BINARY_DIR}/weights.txt COPYONLY)
 
 add_executable(pi level2/PI/pi.cpp)
 if (WIN32)

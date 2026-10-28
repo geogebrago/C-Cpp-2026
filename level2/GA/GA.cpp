@@ -335,7 +335,7 @@ int main()
 
     if (!input_map())
         return 0;
-
+    clock_t begin = clock();
     for (int i = 0; i < POPULATION_SIZE; ++i)
     {
         init_one(p[i]);
@@ -414,6 +414,6 @@ int main()
 
     cout << "\n最终最高适应度：" << p[best_id].fitness << '\n';
     print_path(p[best_id]);
-
-    return 0;
+    clock_t end = clock();
+    return !printf("%.6lf", double(end - begin) / CLOCKS_PER_SEC);
 }

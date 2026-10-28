@@ -415,5 +415,6 @@ int main()
     cout << "\n最终最高适应度：" << p[best_id].fitness << '\n';
     print_path(p[best_id]);
     clock_t end = clock();
-    return !printf("%.6lf", double(end - begin) / CLOCKS_PER_SEC);
+    cout << "所用的时间：" << double(end - begin) / CLOCKS_PER_SEC << " 秒\n";
+    return 0;
 }

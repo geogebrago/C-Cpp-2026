@@ -112,14 +112,14 @@ bool Input(double (&input)[input_size])
     for (int r=0;r<side;r++)
     {
         if (!safe_input(line))
-            return false;
+            return 0;
         if (r==0)
         {
             string cmd=line;
             if (!cmd.empty()&&cmd.back()=='\r')
                 cmd.pop_back();
             if (cmd=="quit"||cmd=="exit"||cmd=="q")
-                return false;
+                return 0;
         }
         for (int c=0;c<side;c++)
         {
@@ -127,7 +127,7 @@ bool Input(double (&input)[input_size])
             input[r*side+c]=Check(ch)?1.0:0.0;
         }
     }
-    return true;
+    return 1;
 }
 void Centerimage(const double (&input)[input_size],double (&centered)[input_size])
 {
@@ -280,10 +280,10 @@ bool TrainNetwork(Network& net)
     cout<<"读取中...\n";
     int traincount=Loaddata(Datapath("train.txt"),train_capcity,train_image,train_index);
     if (traincount<=0)
-        return false;
+        return 0;
     int testcount=Loaddata(Datapath("test.txt"),test_capcity,test_image,test_index);
     if (testcount<=0)
-        return false;
+        return 0;
     mt19937 random_engine(sizeof("depress"));
     InitNet(net,random_engine);
     vector<int> order(traincount);
@@ -309,40 +309,40 @@ bool TrainNetwork(Network& net)
         double testaccuracy=Accuracy(net,test_image,test_index,testcount);
         cout<<"第 "<<epoch<<" 轮结束：平均误差 "<<totalloss/traincount<<"，训练集正确率 "<<trainaccuracy*100.0<<"%，测试集正确率 "<<testaccuracy*100.0<<"%\n";
     }
-    return true;
+    return 1;
 }
 bool Loadweights(Network& net)
 {
     ifstream file(Datapath("weights.txt"));
     if (!file)
-        return false;
+        return 0;
     for (int i=0;i<input_size;i++)
     {
         for (int j=0;j<hidden_size;j++)
         {
             if (!(file>>net.weighttohidden[i][j]))
-                return false;
+                return 0;
         }
     }
     for (int j=0;j<hidden_size;j++)
     {
         if (!(file>>net.biashidden[j]))
-            return false;
+            return 0;
     }
     for (int j=0;j<hidden_size;j++)
     {
         for (int k=0;k<output_size;k++)
         {
             if (!(file>>net.weighttooutput[j][k]))
-                return false;
+                return 0;
         }
     }
     for (int k=0;k<output_size;k++)
     {
         if (!(file>>net.biasoutput[k]))
-            return false;
+            return 0;
     }
-    return true;
+    return 1;
 }
 void Print(const double (&input)[input_size])
 {
@@ -407,12 +407,12 @@ int main()
     {
         double centered[input_size];
         Centerimage(input,centered);
-        bool blank=true;
+        bool blank=1;
         for (int i=0;i<input_size;i++)
         {
             if (centered[i]>0.5)
             {
-                blank=false;
+                blank=0;
                 break;
             }
         }

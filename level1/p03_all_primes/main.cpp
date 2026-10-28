@@ -19,7 +19,7 @@ int main()
         }
         for (int j = 1; j <= prime_count && primes[j] <= limit / i; ++j)
         {
-            is_composite[i * primes[j]] = true;
+            is_composite[i * primes[j]] = 1;
             if (i % primes[j] == 0)
                 break;
         }

@@ -97,7 +97,7 @@ int widthAt(int ply)
 {
 }
 /* ============================== 六、MinMax + Alpha-Beta ============================== */ long long nodeCount = 0;
-bool timeUpFlag = false;
+bool timeUpFlag = 0;
 double minmax(int player, int depth, double alpha, double beta, int ply)
 {
 }

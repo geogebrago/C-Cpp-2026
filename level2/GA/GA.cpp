@@ -26,11 +26,11 @@ bool valid(int x, int y)
 bool input_map()
 {
     if (!safe_input(ROWS, "请输入地图行数（最大20）：") || !safe_input(COLS, "请输入地图列数（最大20）："))
-        return false;
+        return 0;
     if (ROWS < 1 || ROWS > N || COLS < 1 || COLS > N)
     {
         cout << "地图尺寸错误！行数和列数必须在 1~20 之间。\n";
-        return false;
+        return 0;
     }
     int sc = 0, ec = 0;
     cout << "请输入地图（# 为墙，. 为道路，@ 为起点，$ 为终点）：\n";
@@ -40,14 +40,14 @@ bool input_map()
         if (!safe_input(s) || (int)s.size() != COLS)
         {
             cout << "第 " << i + 1 << " 行长度错误！\n";
-            return false;
+            return 0;
         }
         for (int j = 0; j < COLS; ++j)
         {
             if (s[j] != '#' && s[j] != '.' && s[j] != '@' && s[j] != '$')
             {
                 cout << "地图中存在非法字符！\n";
-                return false;
+                return 0;
             }
             mp[i][j] = s[j];
             if (s[j] == '@')
@@ -67,10 +67,10 @@ bool input_map()
     if (sc != 1 || ec != 1)
     {
         cout << "地图必须恰好包含一个起点和一个终点！\n";
-        return false;
+        return 0;
     }
     GENE_LENGTH = ROWS * COLS;
-    return true;
+    return 1;
 }
 bool can_move(int x, int y, int d)
 {
@@ -79,16 +79,16 @@ bool can_move(int x, int y, int d)
 bool has_other_move(int x, int y, int last_dir)
 {
     if (last_dir == -1)
-        return false;
+        return 0;
     int rev = (last_dir + 2) % 4;
     for (int d = 0; d < 4; ++d)
     {
         if (d == rev)
             continue;
         if (can_move(x, y, d))
-            return true;
+            return 1;
     }
-    return false;
+    return 0;
 }
 int calc_fitness(nd &a)
 {

@@ -114,7 +114,7 @@ int main()
     current_y = rand() % cols + 1;
     player_x = current_x;
     player_y = current_y;
-    visited[current_x][current_y] = true;
+    visited[current_x][current_y] = 1;
     add_frontier();
     while (frontier_size > 0)
     {
@@ -127,8 +127,8 @@ int main()
         int ny = y + direction_y[d];
         if (is_inside(nx, ny) && !visited[nx][ny])
         {
-            visited[x][y] = true;
-            visited[nx][ny] = true;
+            visited[x][y] = 1;
+            visited[nx][ny] = 1;
             current_x = nx;
             current_y = ny;
             add_frontier();
@@ -159,7 +159,7 @@ int main()
             }
         }
     }
-    while (true)
+    while (1)
     {
         print_board();
         handle_input();

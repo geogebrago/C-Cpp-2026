@@ -39,8 +39,8 @@ int main()
     a[1]=1919810;
     cout<<a[0]<<" "<<a[1]<<endl;
     safe_array<bool> b(3);
-    b[0]=true;
-    b[1]=false;
+    b[0]=1;
+    b[1]=0;
     cout<<b[0]<<" "<<b[1]<<endl;
     return 0;
 }

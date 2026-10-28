@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include "main2.h"
-
 void print_board(void)
 {
     for (int i = 1; i <= rows; ++i)

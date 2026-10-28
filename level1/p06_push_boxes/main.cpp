@@ -4,91 +4,69 @@
 #include <windows.h>
 #include <conio.h>
 #include "../../safe_input.h"
-
 #define MAX_SIZE 1005
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
-
-static int menu_choice, player_x, player_y, steps, level;
-static int rows, cols;
-static int target_x[MAX_SIZE], target_y[MAX_SIZE];
-static int box_x[MAX_SIZE], box_y[MAX_SIZE];
-static int target_count, box_count;
-static int scores[4];
-static int direction_x[5] = {0, 1, -1, 0, 0};
-static int direction_y[5] = {0, 0, 0, 1, -1};
-static char grid[MAX_SIZE][MAX_SIZE];
-static char source_path[MAX_SIZE];
-
-static int get_path(char *path, const char *name)
+int menu_choice, player_x, player_y, steps, level;
+int rows, cols;
+int target_x[MAX_SIZE], target_y[MAX_SIZE];
+int box_x[MAX_SIZE], box_y[MAX_SIZE];
+int target_count, box_count;
+int scores[4];
+int direction_x[5] = {0, 1, -1, 0, 0};
+int direction_y[5] = {0, 0, 0, 1, -1};
+char grid[MAX_SIZE][MAX_SIZE];
+char source_path[MAX_SIZE];
+int get_path(char *path, const char *name)
 {
     char temp[MAX_SIZE];
     int len;
-
     if (source_path[0] == '\0')
         len = snprintf(temp, MAX_SIZE, "%s", name);
     else
         len = snprintf(temp, MAX_SIZE, "%s\\%s", source_path, name);
-
     if (len < 0 || len >= MAX_SIZE)
         return 0;
-
     DWORD path_length =
         GetFullPathNameA(temp, MAX_SIZE, path, NULL);
-
     return path_length > 0 && path_length < MAX_SIZE;
 }
-
-
-static int get_score_path(char *path, const char *name)
+int get_score_path(char *path, const char *name)
 {
     int len;
-
     if (source_path[0] == '\0')
         len = snprintf(path, MAX_SIZE, "%s", name);
     else
         len = snprintf(path, MAX_SIZE, "%s\\%s",
                        source_path, name);
-
     return len >= 0 && len < MAX_SIZE;
 }
-
-
-static int is_inside(int x, int y)
+int is_inside(int x, int y)
 {
     return x >= 1 && x <= rows && y >= 1 && y <= cols;
 }
-
-
-static int find_target(int x, int y)
+int find_target(int x, int y)
 {
     for (int i = 1; i <= target_count; ++i)
     {
         if (target_x[i] == x && target_y[i] == y)
             return i;
     }
-
     return 0;
 }
-
-
-static int find_box(int x, int y)
+int find_box(int x, int y)
 {
     for (int i = 1; i <= box_count; ++i)
     {
         if (box_x[i] == x && box_y[i] == y)
             return 1;
     }
-
     return 0;
 }
-
-
-static int check_map()
+int check_map()
 {
     int count_player = 0;
     int count_target = 0;
     int count_box = 0;
-
     for (int i = 1; i <= rows; ++i)
     {
         for (int j = 1; j <= cols; ++j)
@@ -104,7 +82,6 @@ static int check_map()
             {
                 return 0;
             }
-
             if (count_target >= MAX_SIZE ||
                 count_box >= MAX_SIZE)
             {
@@ -112,47 +89,37 @@ static int check_map()
             }
         }
     }
-
     if (count_player != 1 ||
         count_target != count_box ||
         count_target == 0)
     {
         return 0;
     }
-
     return 1;
 }
-
-
-static int load_level_file(const char *file)
+int load_level_file(const char *file)
 {
     FILE *fp = fopen(file, "r");
-
     if (fp == NULL)
     {
         printf("文件打开失败: %s\n", file);
         return 0;
     }
-
     memset(grid, ' ', sizeof(grid));
     rows = 0;
     cols = 0;
-
     char line[MAX_SIZE + 2];
-
     while (fgets(line, sizeof(line), fp) != NULL)
     {
         int len = (int)strlen(line);
         int has_newline =
             len > 0 && line[len - 1] == '\n';
-
         while (len > 0 &&
                (line[len - 1] == '\n' ||
                 line[len - 1] == '\r'))
         {
             line[--len] = '\0';
         }
-
         if (rows == 0 &&
             len >= 3 &&
             (unsigned char)line[0] == 0xEF &&
@@ -162,69 +129,54 @@ static int load_level_file(const char *file)
             memmove(line, line + 3, len - 2);
             len -= 3;
         }
-
         if (len == 0)
             continue;
-
         if (len >= MAX_SIZE ||
             rows + 1 >= MAX_SIZE)
         {
             fclose(fp);
-
             printf("地图太大，行数和列数最多为%d。\n",
                    MAX_SIZE - 1);
-
             return 0;
         }
-
         if (!has_newline && !feof(fp))
         {
             fclose(fp);
             printf("地图某一行过长或文件格式错误。\n");
             return 0;
         }
-
         ++rows;
         cols = MAX(cols, len);
-
         for (int j = 1; j <= len; ++j)
             grid[rows][j] = line[j - 1];
     }
-
     if (ferror(fp))
     {
         fclose(fp);
         printf("读取地图文件失败。\n");
         return 0;
     }
-
     fclose(fp);
-
     if (rows == 0 || cols == 0)
     {
         printf("地图为空\n");
         return 0;
     }
-
     if (!check_map())
     {
         printf("地图格式错误：请检查字符、玩家数量、");
         printf("箱子和目标数量及容量。\n");
         return 0;
     }
-
     return 1;
 }
-
-
-static void setup_level()
+void setup_level()
 {
     target_count = 0;
     box_count = 0;
     steps = 0;
     player_x = 0;
     player_y = 0;
-
     for (int i = 1; i <= rows; ++i)
     {
         for (int j = 1; j <= cols; ++j)
@@ -250,17 +202,13 @@ static void setup_level()
         }
     }
 }
-
-
-static void print_board()
+void print_board()
 {
     printf("\033[2J\033[H");
-
     printf("==============================\n");
     printf("         推箱子小游戏\n");
     printf("==============================\n");
     printf("关卡: %d    步数: %d\n\n", level, steps);
-
     for (int i = 1; i <= rows; ++i)
     {
         for (int j = 1; j <= cols; ++j)
@@ -277,38 +225,27 @@ static void print_board()
             else
                 putchar(grid[i][j]);
         }
-
         putchar('\n');
     }
-
     printf("\nWASD上下左右移动  R重开  Q返回\n");
 }
-
-
-static int check_win()
+int check_win()
 {
     for (int i = 1; i <= target_count; ++i)
     {
         if (!find_box(target_x[i], target_y[i]))
             return 0;
     }
-
     return 1;
 }
-
-
-static int handle_input()
+int handle_input()
 {
     int ch = _getch();
-
     if (ch == 'q' || ch == 'Q')
         return 0;
-
     if (ch == 'r' || ch == 'R')
         return 2;
-
     int d = -1;
-
     if (ch == 'w' || ch == 'W')
         d = 2;
     else if (ch == 's' || ch == 'S')
@@ -320,7 +257,6 @@ static int handle_input()
     else if (ch == 224)
     {
         ch = _getch();
-
         if (ch == 72)
             d = 2;
         else if (ch == 80)
@@ -330,21 +266,16 @@ static int handle_input()
         else if (ch == 77)
             d = 3;
     }
-
     if (d == -1)
         return 1;
-
     int next_x = player_x + direction_x[d];
     int next_y = player_y + direction_y[d];
-
     if (!is_inside(next_x, next_y) ||
         grid[next_x][next_y] == '#')
     {
         return 1;
     }
-
     int box_index = 0;
-
     for (int i = 1; i <= box_count; ++i)
     {
         if (box_x[i] == next_x &&
@@ -354,62 +285,48 @@ static int handle_input()
             break;
         }
     }
-
     if (box_index)
     {
         int box_next_x =
             next_x + direction_x[d];
-
         int box_next_y =
             next_y + direction_y[d];
-
         if (!is_inside(box_next_x, box_next_y) ||
             grid[box_next_x][box_next_y] == '#' ||
             find_box(box_next_x, box_next_y))
         {
             return 1;
         }
-
         box_x[box_index] = box_next_x;
         box_y[box_index] = box_next_y;
     }
-
     player_x = next_x;
     player_y = next_y;
     ++steps;
-
     return 1;
 }
-
-
-static void save_score()
+void save_score()
 {
     if (scores[level] == 0 ||
         steps < scores[level])
     {
         scores[level] = steps;
     }
-
     char file[MAX_SIZE];
     char temp_file[MAX_SIZE];
-
     if (!get_score_path(file, "score.txt") ||
         !get_score_path(temp_file, "score.tmp"))
     {
         printf("成绩文件路径过长，无法保存。\n");
         return;
     }
-
     FILE *fp = fopen(temp_file, "w");
-
     if (fp == NULL)
     {
         printf("无法创建成绩临时文件，保存失败。\n");
         return;
     }
-
     int ok = 1;
-
     for (int i = 1; i <= 3; ++i)
     {
         if (fprintf(fp, "%d\n", scores[i]) < 0)
@@ -418,17 +335,14 @@ static void save_score()
             break;
         }
     }
-
     if (fclose(fp) != 0)
         ok = 0;
-
     if (!ok)
     {
         remove(temp_file);
         printf("写入成绩失败。\n");
         return;
     }
-
     if (!MoveFileExA(temp_file, file,
                      MOVEFILE_REPLACE_EXISTING |
                      MOVEFILE_WRITE_THROUGH))
@@ -438,30 +352,24 @@ static void save_score()
                GetLastError());
         return;
     }
-
     printf("成绩已保存。\n");
 }
-
-
-static int load_game_level()
+int load_game_level()
 {
     char file[MAX_SIZE];
     int path_ok;
-
     if (level == 1)
         path_ok = get_path(file, "yi.txt");
     else if (level == 2)
         path_ok = get_path(file, "er.txt");
     else
         path_ok = get_path(file, "san.txt");
-
     if (!path_ok)
     {
         printf("地图文件路径过长。\n");
         _getch();
         return 0;
     }
-
     if (!load_level_file(file))
     {
         printf("请确认地图文件位于程序同目录: %s\n",
@@ -469,35 +377,26 @@ static int load_game_level()
         _getch();
         return 0;
     }
-
     setup_level();
     return 1;
 }
-
-
-static void play_level()
+void play_level()
 {
     while (1)
     {
         print_board();
-
         if (check_win())
         {
             printf("\n恭喜通关！\n");
             printf("本关用了 %d 步\n", steps);
-
             save_score();
-
             printf("按任意键返回\n");
             _getch();
             return;
         }
-
         int key = handle_input();
-
         if (key == 0)
             return;
-
         if (key == 2)
         {
             if (!load_game_level())
@@ -505,30 +404,22 @@ static void play_level()
         }
     }
 }
-
-
-static void load_scores()
+void load_scores()
 {
     char file[MAX_SIZE];
-
     if (!get_score_path(file, "score.txt"))
     {
         for (int i = 1; i <= 3; ++i)
             scores[i] = 0;
-
         return;
     }
-
     FILE *fp = fopen(file, "r");
-
     if (fp == NULL)
     {
         for (int i = 1; i <= 3; ++i)
             scores[i] = 0;
-
         return;
     }
-
     for (int i = 1; i <= 3; ++i)
     {
         if (fscanf(fp, "%d", &scores[i]) != 1 ||
@@ -537,12 +428,9 @@ static void load_scores()
             scores[i] = 0;
         }
     }
-
     fclose(fp);
 }
-
-
-static int print_menu()
+int print_menu()
 {
     printf("==============================\n");
     printf("         推箱子小游戏\n");
@@ -550,41 +438,33 @@ static int print_menu()
     printf("1.关卡\n");
     printf("2.成绩\n");
     printf("3.退出\n");
-
     if (!safe_input(menu_choice))
     {
         return 0;
     }
-
     switch (menu_choice)
     {
     case 1:
     {
         printf("请输入关卡1~3\n");
-
         if (!safe_input(level))
         {
             return 0;
         }
-
         if (level < 1 || level > 3)
         {
             printf("?\n");
             break;
         }
-
         if (load_game_level())
             play_level();
-
         break;
     }
-
     case 2:
     {
         printf("==============================\n");
         printf("           成绩\n");
         printf("==============================\n");
-
         for (int i = 1; i <= 3; ++i)
         {
             if (scores[i])
@@ -593,35 +473,27 @@ static int print_menu()
             else
                 printf("关卡 %d : 暂无成绩\n", i);
         }
-
         printf("\n按任意键返回\n");
         _getch();
-
         break;
     }
-
     case 3:
     {
         printf("已退出\n");
         return 0;
     }
-
     default:
     {
         printf("?\n");
         break;
     }
     }
-
     return 1;
 }
-
-
 int main()
 {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
-
     DWORD source_length =
         GetFullPathNameA(
             __FILE__,
@@ -629,7 +501,6 @@ int main()
             source_path,
             NULL
         );
-
     if (source_length == 0 ||
         source_length >= MAX_SIZE)
     {
@@ -639,28 +510,21 @@ int main()
     {
         char *last_slash =
             strrchr(source_path, '\\');
-
         char *last_forward_slash =
             strrchr(source_path, '/');
-
         if (last_forward_slash != NULL &&
             (last_slash == NULL ||
              last_forward_slash > last_slash))
         {
             last_slash = last_forward_slash;
         }
-
         if (last_slash != NULL)
             *last_slash = '\0';
         else
             source_path[0] = '\0';
     }
-
     load_scores();
-
     while (print_menu());
-
     printf("输入结束，程序退出。\n");
-
     return 0;
 }

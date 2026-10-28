@@ -3,10 +3,8 @@
 #include <cstdint>
 #include "../../safe_input.h"
 using namespace std;
-
 int MAX_LEVEL;
 uint32_t seed = 114514;
-
 uint32_t nextRandom()
 {
     seed ^= seed << 13;
@@ -14,7 +12,6 @@ uint32_t nextRandom()
     seed ^= seed << 5;
     return seed;
 }
-
 struct Node
 {
     int key, level;
@@ -22,7 +19,6 @@ struct Node
     int *span;
     Node *inlineForward[4]{};
     int inlineSpan[4]{};
-
     Node(int k, int lvl)
     {
         key = k, level = lvl;
@@ -41,7 +37,6 @@ struct Node
             fill_n(span, lvl, 0);
         }
     }
-
     ~Node()
     {
         if (level > 4)
@@ -51,14 +46,12 @@ struct Node
         }
     }
 };
-
 class SkipList
 {
 private:
     Node *head;
     int level;
-
-    static int randomLevel()
+    int randomLevel()
     {
         uint32_t r = nextRandom();
         if (r == UINT32_MAX)
@@ -66,14 +59,12 @@ private:
         int zeros = __builtin_ctz(~r);
         return zeros >= MAX_LEVEL - 1 ? MAX_LEVEL : zeros + 1;
     }
-
 public:
     SkipList()
     {
         head = new Node(0, MAX_LEVEL);
         level = 1;
     }
-
     ~SkipList()
     {
         Node *cur = head->forward[0];
@@ -85,7 +76,6 @@ public:
         }
         delete head;
     }
-
     void build(int *values, int n)
     {
         if (n == 0)
@@ -95,10 +85,8 @@ public:
             fill_n(head->span, MAX_LEVEL, 0);
             return;
         }
-
         sort(values, values + n);
         level = min(MAX_LEVEL, __lg(n) + 1);
-
         int *nodeLevels = new int[n];
         for (int i = 0; i < n; ++i)
         {
@@ -110,14 +98,11 @@ public:
                 nodeLevels[i] = k < level ? k : level;
             }
         }
-
         Node **nodes = new Node *[n];
         for (int i = 0; i < n; ++i)
             nodes[i] = new Node(values[i], nodeLevels[i]);
-
         fill_n(head->forward, MAX_LEVEL, nullptr);
         fill_n(head->span, MAX_LEVEL, 0);
-
         head->forward[0] = nodes[0];
         for (int i = 0; i < n; ++i)
         {
@@ -125,7 +110,6 @@ public:
             nodes[i]->span[0] = 1;
         }
         head->span[0] = 1;
-
         for (int i = 1; i < level; ++i)
         {
             Node *pre = head;
@@ -136,7 +120,6 @@ public:
             cur = cur->forward[i - 1];
             if (cur)
                 cur = cur->forward[i - 1];
-
             int stp = 1 << i;
             while (cur)
             {
@@ -148,17 +131,14 @@ public:
                     cur = cur->forward[i - 1];
             }
         }
-
         delete[] nodeLevels;
         delete[] nodes;
     }
-
     void insert(int x)
     {
         Node *update[MAX_LEVEL];
         int ranks[MAX_LEVEL];
         Node *p = head;
-
         for (int i = level - 1; i >= 0; --i)
         {
             ranks[i] = (i == level - 1) ? 0 : ranks[i + 1];
@@ -169,7 +149,6 @@ public:
             }
             update[i] = p;
         }
-
         int newLevel = randomLevel();
         if (newLevel > level)
         {
@@ -182,7 +161,6 @@ public:
             }
             level = newLevel;
         }
-
         Node *newNode = new Node(x, newLevel);
         for (int i = 0; i < newLevel; ++i)
         {
@@ -192,27 +170,22 @@ public:
                     update[i]->span[i] - (ranks[0] - ranks[i]);
             else
                 newNode->span[i] = 0;
-
             update[i]->forward[i] = newNode;
             update[i]->span[i] = ranks[0] - ranks[i] + 1;
         }
-
         for (int i = newLevel; i < level; ++i)
             ++update[i]->span[i];
     }
-
     void erase(int x)
     {
         Node *update[MAX_LEVEL];
         Node *p = head;
-
         for (int i = level - 1; i >= 0; --i)
         {
             while (p->forward[i] && p->forward[i]->key < x)
                 p = p->forward[i];
             update[i] = p;
         }
-
         p = p->forward[0];
         if (p && p->key == x)
         {
@@ -229,12 +202,10 @@ public:
                 }
             }
             delete p;
-
             while (level > 1 && head->forward[level - 1] == nullptr)
                 --level;
         }
     }
-
     int rank(int x)
     {
         Node *p = head;
@@ -249,7 +220,6 @@ public:
         }
         return r + 1;
     }
-
     int kth(int x)
     {
         Node *p = head;
@@ -264,7 +234,6 @@ public:
         }
         return p->key;
     }
-
     int predecessor(int x)
     {
         Node *p = head;
@@ -277,7 +246,6 @@ public:
             return -1;
         return p->key;
     }
-
     int successor(int x)
     {
         Node *p = head;
@@ -291,18 +259,13 @@ public:
         return p->forward[0]->key;
     }
 };
-
 int main()
 {
     int n, m;
-
     if (!safe_input(n) || !safe_input(m) || n < 0 || m < 0)
         return 0;
-
     MAX_LEVEL = __lg(max(1, n + m)) + 2;
-
     SkipList sl;
-
     int *values = new int[n];
     for (int i = 0; i < n; ++i)
     {
@@ -312,17 +275,13 @@ int main()
             return 0;
         }
     }
-
     sl.build(values, n);
     delete[] values;
-
     while (m--)
     {
         int opt, x;
-
         if (!safe_input(opt) || !safe_input(x))
             return 0;
-
         switch (opt)
         {
         case 1:
@@ -347,6 +306,5 @@ int main()
             break;
         }
     }
-
     return 0;
 }

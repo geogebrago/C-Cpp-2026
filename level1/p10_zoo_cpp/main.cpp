@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <windows.h>
+#include "../../safe_input.h"
 using namespace std;
 
 class Animal
@@ -203,14 +204,7 @@ public:
 
 bool inputInt(int &x)
 {
-    if(scanf("%d",&x)!=1)
-    {
-        int c;
-        while((c=getchar())!='\n'&&c!=EOF);
-        return false;
-    }
-
-    return true;
+    return safe_input(x);
 }
 
 int main()
@@ -253,7 +247,8 @@ int main()
                 int db;
 
                 printf("请输入动物名称: ");
-                cin>>name;
+                if (!safe_input(name))
+                    return 0;
 
                 if(name.empty())
                 {
@@ -262,7 +257,8 @@ int main()
                 }
 
                 printf("请输入动物叫声: ");
-                cin>>voice;
+                if (!safe_input(voice))
+                    return 0;
 
                 if(voice.empty())
                 {
@@ -293,7 +289,8 @@ int main()
                 string name;
 
                 printf("请输入动物名称: ");
-                cin>>name;
+                if (!safe_input(name))
+                    return 0;
 
                 zoo.remove(name);
                 break;

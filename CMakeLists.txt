@@ -4,22 +4,22 @@ project(ccpp2026)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(p01_running_letter level1/p01_running_letter/main.c)
-add_executable(p02_is_prime level1/p02_is_prime/main.c)
-add_executable(p03_all_primes level1/p03_all_primes/main.c)
-add_executable(p04_hanoi level1/p04_hanoi/main.c)
+add_executable(p01_running_letter level1/p01_running_letter/main.cpp)
+add_executable(p02_is_prime level1/p02_is_prime/main.cpp)
+add_executable(p03_all_primes level1/p03_all_primes/main.cpp)
+add_executable(p04_hanoi level1/p04_hanoi/main.cpp)
 add_executable(p05_maze
-        level1/p05_maze/main.c
-        level1/p05_maze/main2.c)
-add_executable(p06_push_boxes level1/p06_push_boxes/main.c)
+        level1/p05_maze/main.cpp
+        level1/p05_maze/main2.cpp)
+add_executable(p06_push_boxes level1/p06_push_boxes/main.cpp)
 configure_file(level1/p06_push_boxes/yi.txt ${CMAKE_CURRENT_BINARY_DIR}/yi.txt COPYONLY)
 configure_file(level1/p06_push_boxes/er.txt ${CMAKE_CURRENT_BINARY_DIR}/er.txt COPYONLY)
 configure_file(level1/p06_push_boxes/san.txt ${CMAKE_CURRENT_BINARY_DIR}/san.txt COPYONLY)
 configure_file(level1/p06_push_boxes/score.txt ${CMAKE_CURRENT_BINARY_DIR}/score.txt COPYONLY)
 
-add_executable(p07_linked_list level1/p07_linked_list/main.c)
+add_executable(p07_linked_list level1/p07_linked_list/main.cpp)
 
-add_executable(p08_warehouse level1/p08_warehouse/main.c)
+add_executable(p08_warehouse level1/p08_warehouse/main.cpp)
 configure_file(level1/p08_warehouse/goods.txt ${CMAKE_CURRENT_BINARY_DIR}/goods.txt COPYONLY)
 
 add_executable(p09_safe_array_cpp  level1/p09_safe_array_cpp/main.cpp)
@@ -33,7 +33,7 @@ add_executable(Skiplist_cpp level2/SkipList/SkipList.cpp)
 add_executable(NeuralNetwork level2/NeuralNetworks/NeturalNetwork.cpp)
 configure_file(level2/NeuralNetworks/train.txt ${CMAKE_CURRENT_BINARY_DIR}/train.txt COPYONLY)
 configure_file(level2/NeuralNetworks/test.txt ${CMAKE_CURRENT_BINARY_DIR}/test.txt COPYONLY)
-configure_file(level2/NeuralNetworks/weights88.txt ${CMAKE_CURRENT_BINARY_DIR}/weights.txt COPYONLY)
+configure_file(level2/NeuralNetworks/weights.txt ${CMAKE_CURRENT_BINARY_DIR}/weights.txt COPYONLY)
 
 add_executable(pi level2/PI/pi.cpp)
 if (WIN32)

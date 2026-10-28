@@ -2,16 +2,17 @@
 #include <windows.h>
 #include <string.h>
 #include <stdlib.h>
+#include "../../safe_input.h"
 static const unsigned long delay_ms = 50;
 static const int line_width = 50;
 static const int line_count = 5;
 
 int main()
 {
-    char text[101];
-    if (scanf("%49s", text) != 1)
+    std::string text;
+    if (!safe_input(text))
         return 1;
-    int length = (int)strlen(text);
+    int length = (int)text.length();
     int position = 0;
     int direction = 1;
 
@@ -24,7 +25,7 @@ int main()
         for (int i = 0; i < position; i++)
             putchar(' ');
 
-        printf("%s", text);
+        printf("%s", text.c_str());
 
         for (int i = 0; i < line_width - position - length; i++)
             putchar(' ');

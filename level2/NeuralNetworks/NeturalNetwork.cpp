@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <Windows.h>
+#include "../../safe_input.h"
 using namespace std;
 const int side=8;
 const int input_size=64;
@@ -110,7 +111,7 @@ bool Input(double (&input)[input_size])
     string line;
     for (int r=0;r<side;r++)
     {
-        if (!getline(cin,line))
+        if (!safe_input(line))
             return false;
         if (r==0)
         {

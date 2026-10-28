@@ -1,5 +1,6 @@
 ﻿#include <bits/stdc++.h>
 #include <windows.h>
+#include "../../safe_input.h"
 using namespace std;
 
 const int N = 20;
@@ -34,8 +35,8 @@ bool valid(int x, int y)
 
 bool input_map()
 {
-    cout << "请输入地图行数和列数（最大 20*20）：";
-    if (!(cin >> ROWS >> COLS))
+    if (!safe_input(ROWS, "请输入地图行数（最大20）：") ||
+        !safe_input(COLS, "请输入地图列数（最大20）："))
         return false;
 
     if (ROWS < 1 || ROWS > N || COLS < 1 || COLS > N)
@@ -51,7 +52,7 @@ bool input_map()
     for (int i = 0; i < ROWS; ++i)
     {
         string s;
-        if (!(cin >> s) || (int)s.size() != COLS)
+        if (!safe_input(s) || (int)s.size() != COLS)
         {
             cout << "第 " << i + 1 << " 行长度错误！\n";
             return false;

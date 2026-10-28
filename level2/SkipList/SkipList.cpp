@@ -1,4 +1,7 @@
-﻿#include <bits/stdc++.h>
+﻿#include <iostream>
+#include <algorithm>
+#include <cstdint>
+#include "../../safe_input.h"
 using namespace std;
 
 int MAX_LEVEL;
@@ -289,71 +292,11 @@ public:
     }
 };
 
-namespace
-{
-bool readInt(int &x)
-{
-    int c = getchar();
-
-    while (c != EOF && isspace(c))
-        c = getchar();
-
-    if (c == EOF)
-        return false;
-
-    int sign = 1;
-    if (c == '-' || c == '+')
-    {
-        if (c == '-')
-            sign = -1;
-        c = getchar();
-    }
-
-    if (c < '0' || c > '9')
-    {
-        while (c != EOF && !isspace(c))
-            c = getchar();
-        return false;
-    }
-
-    long long value = 0;
-    bool invalid = false;
-
-    while (c >= '0' && c <= '9')
-    {
-        value = value * 10 + c - '0';
-
-        if (value > (long long)INT_MAX + 1)
-            invalid = true;
-
-        c = getchar();
-    }
-
-    if (c != EOF && !isspace(c))
-    {
-        invalid = true;
-        while (c != EOF && !isspace(c))
-            c = getchar();
-    }
-
-    if (invalid)
-        return false;
-
-    value *= sign;
-
-    if (value < INT_MIN || value > INT_MAX)
-        return false;
-
-    x = (int)value;
-    return true;
-}
-}
-
 int main()
 {
     int n, m;
 
-    if (!readInt(n) || !readInt(m) || n < 0 || m < 0)
+    if (!safe_input(n) || !safe_input(m) || n < 0 || m < 0)
         return 0;
 
     MAX_LEVEL = __lg(max(1, n + m)) + 2;
@@ -363,7 +306,7 @@ int main()
     int *values = new int[n];
     for (int i = 0; i < n; ++i)
     {
-        if (!readInt(values[i]))
+        if (!safe_input(values[i]))
         {
             delete[] values;
             return 0;
@@ -377,7 +320,7 @@ int main()
     {
         int opt, x;
 
-        if (!readInt(opt) || !readInt(x))
+        if (!safe_input(opt) || !safe_input(x))
             return 0;
 
         switch (opt)

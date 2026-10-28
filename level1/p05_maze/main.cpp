@@ -22,8 +22,7 @@ int frontier_size = 0;
 int frontier_capacity = 0;
 bool is_inside(int x, int y)
 {
-    return x >= 1 && x <= rows &&
-           y >= 1 && y <= cols;
+    return x >= 1 && x <= rows && y >= 1 && y <= cols;
 }
 void frontier_push(Candidate candidate)
 {
@@ -107,8 +106,7 @@ int main()
     srand((unsigned)time(NULL));
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
-    if (!safe_input(rows, "请输入生成的迷宫的行数（大于3且小于1000）：\n") ||
-        !safe_input(cols, "请输入生成的迷宫的列数（大于3且小于1000）：\n"))
+    if (!safe_input(rows, "请输入生成的迷宫的行数（大于3且小于1000）：\n") || !safe_input(cols, "请输入生成的迷宫的列数（大于3且小于1000）：\n"))
         return 0;
     if (rows <= 3 || cols <= 3 || rows >= MAX_SIZE || cols >= MAX_SIZE)
         return 0;

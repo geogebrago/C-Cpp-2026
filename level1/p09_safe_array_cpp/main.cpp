@@ -3,11 +3,9 @@ using namespace std;
 template<typename T>
 class safe_array
 {
-private:
-    T *a;
+private: T *a;
     int n;
-public:
-    safe_array(int sz)
+public: safe_array(int sz)
     {
         if (sz<=0)
         {

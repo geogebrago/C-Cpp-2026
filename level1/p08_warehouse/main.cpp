@@ -20,8 +20,7 @@ int find_item(const char *id);
 void get_path(char *path, const char *name)
 {
     char source_path[MAX_PATH_LENGTH];
-    DWORD length = GetFullPathNameA(__FILE__, MAX_PATH_LENGTH,
-                                    source_path, NULL);
+    DWORD length = GetFullPathNameA(__FILE__, MAX_PATH_LENGTH, source_path, NULL);
     if (length == 0 || length >= MAX_PATH_LENGTH)
     {
         path[0] = '\0';
@@ -29,8 +28,7 @@ void get_path(char *path, const char *name)
     }
     char *last_slash = strrchr(source_path, '\\');
     char *last_forward_slash = strrchr(source_path, '/');
-    if (last_slash == NULL ||
-        (last_forward_slash != NULL && last_forward_slash > last_slash))
+    if (last_slash == NULL || (last_forward_slash != NULL && last_forward_slash > last_slash))
         last_slash = last_forward_slash;
     if (last_slash == NULL)
     {
@@ -38,8 +36,7 @@ void get_path(char *path, const char *name)
         return;
     }
     *(last_slash + 1) = '\0';
-    int written = snprintf(path, MAX_PATH_LENGTH, "%s%s",
-                           source_path, name);
+    int written = snprintf(path, MAX_PATH_LENGTH, "%s%s", source_path, name);
     if (written < 0 || written >= MAX_PATH_LENGTH)
         path[0] = '\0';
 }
@@ -58,16 +55,13 @@ void load_items()
         printf("文件打开失败！\n");
         return;
     }
-    while (item_count < MAX_ITEM_TYPES - 1 &&
-           fscanf(file, "%104s %lf %d",
-                  input_buffer, &price_temp, &menu_choice) == 3)
+    while (item_count < MAX_ITEM_TYPES - 1 && fscanf(file, "%104s %lf %d", input_buffer, &price_temp, &menu_choice) == 3)
     {
         if (price_temp <= 0 || menu_choice < 0)
             continue;
         if (find_item(input_buffer) != -1)
         {
-            printf("发现重复商品型号 %s，已跳过重复记录！\n",
-                   input_buffer);
+            printf("发现重复商品型号 %s，已跳过重复记录！\n", input_buffer);
             continue;
         }
         ++item_count;
@@ -87,8 +81,7 @@ int find_item(const char *id)
 void print_all_items()
 {
     for (int i = 1; i <= item_count; ++i)
-        printf("%-15s %-15.2f %-15d\n",
-               items[i].id, items[i].price, items[i].quantity);
+        printf("%-15s %-15.2f %-15d\n", items[i].id, items[i].price, items[i].quantity);
 }
 void show_inventory()
 {
@@ -202,8 +195,7 @@ void remove_stock()
         {
             return;
         }
-        if (temp_quantity > 0 &&
-            temp_quantity <= items[position].quantity)
+        if (temp_quantity > 0 && temp_quantity <= items[position].quantity)
             break;
         printf("出库数量必须大于0且不能超过当前库存！\n");
     }
@@ -246,14 +238,10 @@ void save_items()
             }
         if (repeated)
         {
-            printf("发现重复商品型号 %s，已跳过重复存档！\n",
-                   items[i].id);
+            printf("发现重复商品型号 %s，已跳过重复存档！\n", items[i].id);
             continue;
         }
-        if (fprintf(file, "%s %.2f %d\n",
-                    items[i].id,
-                    items[i].price,
-                    items[i].quantity) < 0)
+        if (fprintf(file, "%s %.2f %d\n", items[i].id, items[i].price, items[i].quantity) < 0)
         {
             printf("数据写入失败！\n");
             fclose(file);

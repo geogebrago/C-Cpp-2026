@@ -21,14 +21,11 @@ struct nd
 nd p[POPULATION_SIZE], np[POPULATION_SIZE];
 bool valid(int x, int y)
 {
-    return x >= 0 && x < ROWS &&
-           y >= 0 && y < COLS &&
-           mp[x][y] != '#';
+    return x >= 0 && x < ROWS && y >= 0 && y < COLS && mp[x][y] != '#';
 }
 bool input_map()
 {
-    if (!safe_input(ROWS, "请输入地图行数（最大20）：") ||
-        !safe_input(COLS, "请输入地图列数（最大20）："))
+    if (!safe_input(ROWS, "请输入地图行数（最大20）：") || !safe_input(COLS, "请输入地图列数（最大20）："))
         return false;
     if (ROWS < 1 || ROWS > N || COLS < 1 || COLS > N)
     {
@@ -47,8 +44,7 @@ bool input_map()
         }
         for (int j = 0; j < COLS; ++j)
         {
-            if (s[j] != '#' && s[j] != '.' &&
-                s[j] != '@' && s[j] != '$')
+            if (s[j] != '#' && s[j] != '.' && s[j] != '@' && s[j] != '$')
             {
                 cout << "地图中存在非法字符！\n";
                 return false;
@@ -305,8 +301,7 @@ int main()
             {
                 if (rd() % 100 < mutation_rate)
                     np[i].s[j] = rd() % 4;
-                if (i + 1 < POPULATION_SIZE &&
-                    rd() % 100 < mutation_rate)
+                if (i + 1 < POPULATION_SIZE && rd() % 100 < mutation_rate)
                     np[i + 1].s[j] = rd() % 4;
             }
         }

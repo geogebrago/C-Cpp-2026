@@ -5,15 +5,13 @@
 using namespace std;
 class Animal
 {
-public:
-    virtual void speak() = 0;
+public: virtual void speak() = 0;
     virtual ~Animal() = default;
 };
 namespace {
     class Dog : public Animal
     {
-    public:
-        void speak() override
+    public: void speak() override
         {
             cout << "汪汪！" << endl;
             Beep(800, 200);
@@ -22,8 +20,7 @@ namespace {
     };
     class Cat : public Animal
     {
-    public:
-        void speak() override
+    public: void speak() override
         {
             cout << "喵喵！" << endl;
             Beep(1000, 150);
@@ -32,8 +29,7 @@ namespace {
     };
     class Bird : public Animal
     {
-    public:
-        void speak() override
+    public: void speak() override
         {
             cout << "啾啾！" << endl;
             Beep(1200, 100);
@@ -42,8 +38,7 @@ namespace {
     };
     class WolfDog : public Animal
     {
-    public:
-        void speak() override
+    public: void speak() override
         {
             cout << "嗷嗷！" << endl;
             Beep(500, 200);
@@ -53,10 +48,8 @@ namespace {
 }
 class Zoo
 {
-private:
-    vector<Animal*> animals;
-public:
-    void add(Animal* animal)
+private: vector<Animal*> animals;
+public: void add(Animal* animal)
     {
         if (animal != nullptr)
         {
@@ -98,8 +91,7 @@ class Animal
     string name;
     string voice;
     int db;
-public:
-    Animal(string n,string v,int d)
+public: Animal(string n,string v,int d)
     {
         name=n;
         voice=v;
@@ -118,8 +110,7 @@ public:
 class Zoo
 {
     vector<Animal*> animals;
-public:
-    void add(Animal* s)
+public: void add(Animal* s)
     {
         if(s==nullptr)
         {
@@ -204,8 +195,7 @@ int main()
         }
         switch(choice)
         {
-        case 1:
-            {
+        case 1: {
                 string name,voice;
                 int db;
                 printf("请输入动物名称: ");
@@ -238,8 +228,7 @@ int main()
                 zoo.add(new Animal(name,voice,db));
                 break;
             }
-        case 2:
-            {
+        case 2: {
                 string name;
                 printf("请输入动物名称: ");
                 if (!safe_input(name))
@@ -247,19 +236,16 @@ int main()
                 zoo.remove(name);
                 break;
             }
-        case 3:
-            {
+        case 3: {
                 printf("动物叫叫叫\n");
                 zoo.speak();
                 break;
             }
-        case 4:
-            {
+        case 4: {
                 printf("退出\n");
                 return 0;
             }
-        default:
-            {
+        default: {
                 printf("无效的选择，请输入 1 ~ 4\n");
                 break;
             }

@@ -48,8 +48,7 @@ struct Node
 };
 class SkipList
 {
-private:
-    Node *head;
+private: Node *head;
     int level;
     int randomLevel()
     {
@@ -59,8 +58,7 @@ private:
         int zeros = __builtin_ctz(~r);
         return zeros >= MAX_LEVEL - 1 ? MAX_LEVEL : zeros + 1;
     }
-public:
-    SkipList()
+public: SkipList()
     {
         head = new Node(0, MAX_LEVEL);
         level = 1;
@@ -166,8 +164,7 @@ public:
         {
             newNode->forward[i] = update[i]->forward[i];
             if (update[i]->forward[i])
-                newNode->span[i] =
-                    update[i]->span[i] - (ranks[0] - ranks[i]);
+                newNode->span[i] = update[i]->span[i] - (ranks[0] - ranks[i]);
             else
                 newNode->span[i] = 0;
             update[i]->forward[i] = newNode;
@@ -284,26 +281,19 @@ int main()
             return 0;
         switch (opt)
         {
-        case 1:
-            sl.insert(x);
+        case 1: sl.insert(x);
             break;
-        case 2:
-            sl.erase(x);
+        case 2: sl.erase(x);
             break;
-        case 3:
-            printf("%d\n", sl.rank(x));
+        case 3: printf("%d\n", sl.rank(x));
             break;
-        case 4:
-            printf("%d\n", sl.kth(x));
+        case 4: printf("%d\n", sl.kth(x));
             break;
-        case 5:
-            printf("%d\n", sl.predecessor(x));
+        case 5: printf("%d\n", sl.predecessor(x));
             break;
-        case 6:
-            printf("%d\n", sl.successor(x));
+        case 6: printf("%d\n", sl.successor(x));
             break;
-        default:
-            break;
+        default: break;
         }
     }
     return 0;

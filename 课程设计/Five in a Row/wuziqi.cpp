@@ -1,132 +1,222 @@
-﻿/* * ================================================================ *  五子棋  ——  控制台人机对战 模板版
- *  算法占位：估值函数 + 极大极小搜索(MinMax) + 阿尔法-贝塔剪枝
- *           + 迭代加深 + 着法排序 + 时间控制
- *  规则：15x15 棋盘，无禁手，先连成 5 子（5 子以上也算）者获胜
- * *  编译：g++ -O2 -std=c++17 -o gomoku gomoku.cpp
- *  运行：./gomoku     （可选参数：每步思考的毫秒数，默认 1000）
- * *  符号：'#' 黑子(先手)   '*' 白子(后手)   '.' 空点
- *  落子：输入 "行 列"，行列都是 1~15，从左上角开始数，先写行再写列
- *       例如 "8 8" 就是天元
- *  命令：undo 悔棋 / hint 提示 / help 帮助 / quit 退出
- * * ================================================================ */ #include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <iostream>
-#include <string>
-#include <vector>
-#ifdef _WIN32
-#include <windows.h>
-#endif
+﻿//0 empty -1 black 1 white
+#include<iostream>
+#include<Windows.h>
+#include "../../safe_input.h"
 using namespace std;
-/* ============================== 一、棋盘约定 ============================== */ const int N = 15;        // 棋盘 15 x 15
-const int WIN_LEN = 5;   // 连成 5 子获胜
-const int MAX_DEPTH = 8; // 搜索的最大层数（一层 = 一方走一步）
-const int LINE_MAX = 2 * N + 1;
-const int EMPTY = -1; // 空点
-const int BLACK = 0;  // 黑子 '#'
-const int WHITE = 1;  // 白子 '*'
-// 四个方向：横、竖、右下斜 "\"、右上斜 "/"
-const int DR[4] = {0, 1, 1, 1};
-const int DC[4] = {1, 0, 1, -1};
-int board[N][N];
-int nearCount[N][N]; // 每个空点周围 2 格内有多少颗子（用来找候选点）
-bool inBoard(int r, int c)
+const int board_size=15;
+const int wu=100000;
+const int huosi=10000;
+const int chongsi=1200;
+const int huosan=1000;
+const int chongsan=100;
+const int huoer=10;
+const int chonger=1;
+const int INF=1e18;
+int board[board_size][board_size],next[board_size][board_size],score[2];
+int dr[4]={1,0,1,1},dc[4]={0,1,1,-1};
+bool in(int x,int y)
 {
+    return x>=0&&x<board_size&&y>=0&&y<board_size;
 }
-/* ---- 时间控制：搜索过程中会用到，所以定义放在前面 ---- */ int timeLimitMs = 1000;                     // 每步最多思考多少毫秒
-long long elapsedMs();                      // 已经过了多少毫秒
-/* ============================== 二、估值函数 ============================== */ const double SCORE_FIVE = 100000.0;         // 五连
-const double SCORE_OPEN4 = 10000.0;         // 活四
-const double SCORE_FOUR3 = 1200.0;          // 冲四 / 活三
-const double SCORE_SLEEP3 = 120.0;          // 眠三
-const double SCORE_OPEN2 = 60.0;            // 活二
-const double SCORE_SLEEP2 = 8.0;            // 眠二
-const double DEFENSE = 1.1;                 // 防守系数
-const double WIN_SCORE = SCORE_FIVE * 100.0;// 搜索里"已连成五"的分值
-double patternScore(int cnt, int openEnds)
+bool win(int r,int c)
 {
+    int who=board[r][c];
+    for (int d=0;d<4;++d)
+    {
+        int cnt=1;
+        for (int k=1;k<=4;++k)
+        {
+            int nr=r+k*dr[d],nc=c+k*dc[d];
+            if (!in(nr,nc)||board[nr][nc]!=who) break;
+            cnt++;
+        }
+        for (int k=1;k<=4;++k)
+        {
+            int nr=r-k*dr[d],nc=c-k*dc[d];
+            if (!in(nr,nc)||board[nr][nc]!=who) break;
+            cnt++;
+        }
+        if (cnt>=5) return 1;
+    }
+    return 0;
 }
-int getLine(int r, int c, int d, int line[LINE_MAX])
+int patternscore(int cnt,int huo)
 {
+    if (cnt>=5) return wu;
+    if (cnt==4)
+    {
+        if (huo) return huosi;
+        else return chongsi;
+    }
+    if (cnt==3)
+    {
+        if (huo) return huosan;
+        else return chongsan;
+    }
+    if (cnt==2)
+    {
+        if (huo) return huoer;
+        else return chonger;
+    }
+    return 0;
 }
-double lineScore(const int *line, int len, int player)
+int
+int point_value(int r,int c,int who)
 {
+    for (int d=0;d<4;++d)
+    {
+        int cnt=1,huo=0;
+        for (int k=1;k<=4;++k)
+        {
+            int nr=r+k*dr[d],nc=c+k*dc[d];
+            if (!in(nr,nc)||board[nr][nc]!=who)
+            {
+                if (in(nr,nc)&&board[nr][nc]==0) ++huo;
+                break;
+            }
+            cnt++;
+        }
+        for (int k=1;k<=4;++k)
+        {
+            int nr=r-k*dr[d],nc=c-k*dc[d];
+            if (!in(nr,nc)||board[nr][nc]!=who||cnt==5)
+            {
+                if (in(nr,nc)&&board[nr][nc]==0) ++huo;
+                break;
+            }
+            cnt++;
+        }
+        score[who]+=patternscore(cnt,huo);
+    }
 }
-double totalScore[2];
-double lineCache[4][N][N][2];
-void lineStart(int r, int c, int d, int &r0, int &c0)
+void print_board()
 {
+    printf(" ");
+    for (int j=0;j<board_size;j++)
+    {
+        printf("%d", (j+1)%10);
+    }
+    puts("");
+
+    for (int i=0;i<board_size;i++)
+    {
+        printf("%d", (i+1)%10);
+        for (int j=0;j<board_size;j++)
+        {
+            if (board[i][j]==0)
+                printf(" ");
+            else if (board[i][j]==-1)
+                printf("⚫︎");
+            else
+                printf("o");
+        }
+        puts("");
+    }
+
+    printf("行+列 下一步\n");
+    printf("Q 退出\n");
+    printf("U 悔棋\n");
+    printf("H 帮助落子\n");
+
+
 }
-void refreshLines(int r, int c)
+void linestart(int r,int c,int d, int &r0,int &c0)
 {
+    switch (d)
+    {
+    case 0:
+        {
+            r0=0,c0=c;
+            break;
+        }
+    case 1:
+        {
+            r0=r,c0=0;
+            break;
+        }
+    case 2:
+        {
+            int tp=min(r,c);
+            r0=r-tp,c0=c-tp;
+            break;
+        }
+    case 3:
+        {
+            int tp=min(r,board_size-1-c);
+            r0=r-tp,c0=c+tp;
+            break;
+        }
+    }
 }
-void initScore()
+int getLine(int r,int c,int d,int *line)
 {
+    for (size_t i=0;i<board.size();i++)
+    {
+
+    }
 }
-void resetBoard()
+void initscore()
 {
+    int line[board_size];
+    for (int d=0;d<4;++d)
+    {
+        for (int i=0;i<board_size;i++)
+            for (int j=0;j<board_size;j++)
+            {
+                if (in(i+dr[d],j+dc[d]))
+                {
+                   continue;
+                }
+                int len=getLine(i,j,k,line);
+            }
+    }
 }
-double evaluateBoard()
+int widthai(int ply)
 {
+    if (ply==1) return 14;
+    if (ply==2) return 12;
+    if (ply==3) return 10;
+    if (ply==4) return 8;
+    return 6;
 }
-/* ============================== 三、胜负判断 ============================== */ bool checkWin(int r, int c)
+void resetboard()
 {
+    score[0]=score[1]=0;
+    for (int i=0;i<board_size;i++)
+        for (int j=0;j<board_size;j++)
+            board[i][j]=next[i][j]=0;
+
 }
-/* ============================== 四、落子 / 撤子 ============================== */ void makeMove(int r, int c, int color)
+void help()
 {
-}
-void undoMove(int r, int c)
-{
-}
-/* ============================== 五、着法生成与排序 ============================== */ struct Move
-{
-    int r, c;
-    double score; // 排序用
-};
-vector<Move> generateMoves()
-{
-}
-double pointValue(int r, int c, int player)
-{
-}
-void orderMoves(vector<Move> &moves, int player)
-{
-}
-int widthAt(int ply)
-{
-}
-/* ============================== 六、MinMax + Alpha-Beta ============================== */ long long nodeCount = 0;
-bool timeUpFlag = 0;
-double minmax(int player, int depth, double alpha, double beta, int ply)
-{
-}
-/* ============================== 七、AI 走棋 ============================== */ struct AIResult
-{
-    int r, c;        // 选出的落子点（0 基坐标）
-    int depth;       // 实际完成的搜索层数
-    long long nodes; // 搜索节点数
-    double score;    // 这步棋的评分（黑方视角）
-    double seconds;  // 用时
-};
-long long elapsedMs()
-{
-}
-AIResult aiMove(int aiColor)
-{
-}
-/* ============================== 八、界面 ============================== */ char cellChar(int v)
-{
-}
-void printBoard()
-{
-}
-string readLine()
-{
-}
-void printHelp()
-{
+    printf("菜单\n");
+    printf("1. 开始游戏\n");
+    printf("2. 退出游戏\n");
+    int op;
+    if (!safe_input(op))
+        exit(1);
+    switch (op)
+    {
+    case 1:
+        {
+            initscore();
+        }
+    case 2:
+        {
+            printf("已退出");
+            exit(0);
+        }
+    }
 }
 int main()
 {
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
+    while (1)
+    {
+        help();
+
+        resetboard();
+    }
+    return 0;
 }

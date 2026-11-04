@@ -92,7 +92,7 @@ public: SkipList()
                 nodeLevels[i] = level;
             else
             {
-                int k = __builtin_ctz(static_cast<unsigned int>(i)) + 1;
+                int k = __builtin_ctz(i) + 1;
                 nodeLevels[i] = k < level ? k : level;
             }
         }

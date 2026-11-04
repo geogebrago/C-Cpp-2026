@@ -27,115 +27,111 @@ parse_number(const string &text, T &value)
 {
     string input = trim(text);
     if (input.empty())
-        return false;
+        return 0;
     if (input[0] == '+')
         input.erase(0, 1);
     if (input.empty())
-        return false;
+        return 0;
 
     T result{};
     const char *begin = input.data();
     const char *end = begin + input.size();
     from_chars_result result_info = from_chars(begin, end, result);
     if (result_info.ec != errc() || result_info.ptr != end)
-        return false;
+        return 0;
     value = result;
-    return true;
+    return 1;
 }
-
 template <typename T>
 typename enable_if<is_floating_point<T>::value, bool>::type
 parse_number(const string &text, T &value)
 {
     string input = trim(text);
     if (input.empty())
-        return false;
+        return 0;
 
     char *end = nullptr;
     errno = 0;
     long double result = strtold(input.c_str(), &end);
     if (end == input.c_str() || *end != '\0' || errno == ERANGE ||
         !isfinite(result))
-        return false;
+        return 0;
 
     long double min_value = static_cast<long double>(
         numeric_limits<T>::lowest());
     long double max_value = static_cast<long double>(
         numeric_limits<T>::max());
     if (result < min_value || result > max_value)
-        return false;
+        return 0;
 
     T converted = static_cast<T>(result);
     if (!isfinite(converted))
-        return false;
+        return 0;
     value = converted;
-    return true;
+    return 1;
 }
 template <typename T>
 typename enable_if<is_integral<T>::value&& !is_same<T, bool>::value, bool>::type
 safe_input(T &value, const string &prompt = "")
 {
     string line;
-    while (true)
+    while (1)
     {
         cout << prompt;
         if (!getline(cin, line))
         {
             cout << '\n';
-            return false;
+            return 0;
         }
         if (parse_number(line, value))
-            return true;
+            return 1;
         cout << "输入无效或超出范围，请重新输入。\n";
     }
 }
-
 template <typename T>
 typename enable_if<is_floating_point<T>::value, bool>::type
 safe_input(T &value, const string &prompt = "")
 {
     string line;
-    while (true)
+    while (1)
     {
         cout << prompt;
         if (!getline(cin, line))
         {
             cout << '\n';
-            return false;
+            return 0;
         }
         if (parse_number(line, value))
-            return true;
+            return 1;
         cout << "输入无效、超出范围或不是有限浮点数，请重新输入。\n";
     }
 }
-
 inline bool safe_input(string &value, const string &prompt = "")
 {
     cout << prompt;
     if (!getline(cin, value))
     {
         cout << '\n';
-        return false;
+        return 0;
     }
-    return true;
+    return 1;
 }
-
 inline bool safe_input(char &value, const string &prompt = "")
 {
     string line;
-    while (true)
+    while (1)
     {
         cout << prompt;
         if (!getline(cin, line))
         {
             cout << '\n';
-            return false;
+            return 0;
         }
         line = trim(line);
         if (line.size() == 1)
         {
             value = line[0];
-            return true;
+            return 1;
         }
         cout << "请输入一个字符，请重新输入。\n";
     }

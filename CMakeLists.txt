@@ -31,6 +31,8 @@ add_compile_options("-utf-8")
 add_link_options("-utf-8")
 add_executable(Skiplist_cpp level2/SkipList/SkipList.cpp)
 add_executable(NeuralNetwork level2/NeuralNetworks/NeturalNetwork.cpp)
+add_executable(FiveInARow
+        five_in_a_row.cpp)
 configure_file(level2/NeuralNetworks/train.txt ${CMAKE_CURRENT_BINARY_DIR}/train.txt COPYONLY)
 configure_file(level2/NeuralNetworks/test.txt ${CMAKE_CURRENT_BINARY_DIR}/test.txt COPYONLY)
 configure_file(level2/NeuralNetworks/weights.txt ${CMAKE_CURRENT_BINARY_DIR}/weights.txt COPYONLY)

@@ -1,6 +1,6 @@
 #ifndef WUZIQI_H
 #define WUZIQI_H
-#include <chrono>
+#include <ctime>
 #include <vector>
 
 const int timeLimit = 1000;
@@ -26,14 +26,8 @@ struct Move { int r, c; double score; };
 
 inline long long nodes = 0;
 inline bool timeUp = false;
-inline std::chrono::steady_clock::time_point startTime;
+inline std::clock_t startClock = 0;
 inline int limitMs = timeLimit;
-
-inline long long elapsed()
-{
-    return std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now() - startTime).count();
-}
 
 bool in(int x, int y);
 bool win(int r, int c);

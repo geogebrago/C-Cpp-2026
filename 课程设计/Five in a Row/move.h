@@ -21,7 +21,4 @@ void domove(int r,int c,int player)
             ++nearCount[i][j];
     refreshline(r, c);
 }
-
-inline void undoMove(int r, int c) { undo(r, c); }
-inline void makeMove(int r, int c, int player) { domove(r, c, player); }
 #endif

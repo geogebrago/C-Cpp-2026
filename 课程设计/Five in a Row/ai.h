@@ -18,7 +18,7 @@ AIResult aiMove(int aiColor)
     res.nodes = 0;
     res.score = 0.0;
     res.seconds = 0.0;
-    startTime = std::chrono::steady_clock::now();
+    startClock = clock();
     nodes = 0;
     timeUp = false;
     vector<Move> moves = generateMoves();
@@ -28,7 +28,7 @@ AIResult aiMove(int aiColor)
     {
         res.r = moves[0].r;
         res.c = moves[0].c;
-        res.seconds = elapsed() / 1000.0;
+        res.seconds = (clock() - startClock) / (double)CLOCKS_PER_SEC;
         return res;
     }
     orderMoves(moves, aiColor);
@@ -39,9 +39,9 @@ AIResult aiMove(int aiColor)
     double bestKey = 0.0;
     auto rootKey = [&](int r, int c, int depth, double alpha, double beta) -> double
     {
-        makeMove(r, c, aiColor);
+        domove(r, c, aiColor);
         double key;
-        if (checkWin(r, c))
+        if (win(r, c))
         {
             key = winScore + depth;
         }
@@ -72,7 +72,7 @@ AIResult aiMove(int aiColor)
 
         for (size_t i = 0; i < moves.size(); ++i)
         {
-            if (depth > 1 && elapsed() >= limitMs)
+            if (depth > 1 && (clock() - startClock) * 1000LL / CLOCKS_PER_SEC >= limitMs)
             {
                 timeUp = true;
                 aborted = true;
@@ -134,7 +134,7 @@ AIResult aiMove(int aiColor)
             break;
         if (bestKey <= -winScore)
             break;
-        if (aborted || elapsed() >= limitMs)
+        if (aborted || (clock() - startClock) * 1000LL / CLOCKS_PER_SEC >= limitMs)
             break;
     }
 
@@ -142,7 +142,7 @@ AIResult aiMove(int aiColor)
     res.c = bestC;
     res.nodes = nodes;
     res.score = bestKey;
-    res.seconds = elapsed() / 1000.0;
+    res.seconds = (clock() - startClock) / (double)CLOCKS_PER_SEC;
     return res;
 }
 #endif

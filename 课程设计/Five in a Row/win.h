@@ -1,10 +1,12 @@
-﻿
+
 #ifndef CCPP2026_WIN_H
 #define CCPP2026_WIN_H
 #include "basic.h"
 bool win(int r,int c)
 {
+    if (!in(r,c)) return 0;
     int player=board[r][c];
+    if (player==EMPTY) return 0;
     for (int d=0;d<4;++d)
     {
         int cnt=1;
@@ -24,5 +26,4 @@ bool win(int r,int c)
     }
     return 0;
 }
-inline bool checkWin(int r, int c) { return win(r, c); }
 #endif

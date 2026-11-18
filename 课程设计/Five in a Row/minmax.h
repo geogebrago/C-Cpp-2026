@@ -30,9 +30,9 @@ double minmax(int player, int depth, double alpha, double beta, int ply)
     {
         const int r = moves[i].r, c = moves[i].c;
 
-        makeMove(r, c, player);
+        domove(r, c, player);
         double val;
-        if (checkWin(r, c))
+        if (win(r, c))
         {
             val = isMax ? (winScore + depth) : -(winScore + depth);
         }
@@ -40,7 +40,7 @@ double minmax(int player, int depth, double alpha, double beta, int ply)
         {
             val = minmax(1 - player, depth - 1, alpha, beta, ply + 1);
         }
-        undoMove(r, c);
+        undo(r, c);
 
         if (timeUp)
             return best;
@@ -68,7 +68,7 @@ double minmax(int player, int depth, double alpha, double beta, int ply)
         if (alpha >= beta)
             break;
 
-        if ((nodes & 511) == 0 && elapsed() >= limitMs)
+        if ((nodes & 511) == 0 && (clock() - startClock) * 1000LL / CLOCKS_PER_SEC >= limitMs)
         {
             timeUp = true;
             return best;

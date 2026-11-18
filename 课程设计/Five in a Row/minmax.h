@@ -1,45 +1,79 @@
-﻿//
-// Created by 26346 on 2026/11/11.
-//
-
 #ifndef CCPP2026_MINMAX_H
 #define CCPP2026_MINMAX_H
 #include <vector>
 
 #include "estimate.h"
 #include "move.h"
+#include "way.h"
 #include "wuziqi.h"
-const int infscore=2e9;
-struct Move
+double minmax(int player, int depth, double alpha, double beta, int ply)
 {
-    int r,c;
-    int score;
-};
-int minmax(int player,int depth,int aplha,int beta,int ply)//???
-{
-    ++viscount;
-    if (timeflag||depth<=0) return evaluateBoard();
-    vector<Move> moves=generateMoves();
-    if (moves.empty()) return evaluateBoard();
-    orderMoves(moves,player);
-    int wid=widthai(ply);
-    if (moves.size()>wid) moves.resize(wid);
-    bool pd=player==BLACK?1:0;
-    for (int i=0;i<moves.size();++i)
+    ++nodes;
+    if (timeUp)
+        return evaluateBoard();
+    if (depth <= 0)
+        return evaluateBoard();
+
+    vector<Move> moves = generateMoves();
+    if (moves.empty())
+        return evaluateBoard();
+
+    orderMoves(moves, player);
+    int width = widthAt(ply);
+    if ((int)moves.size() > width)
+        moves.resize(width);
+
+    const bool isMax = (player == BLACK);
+    double best = isMax ? -infScore : infScore;
+
+    for (size_t i = 0; i < moves.size(); ++i)
     {
-        int r=moves[i].r,c=moves[i].c;
-        domove(r,c,player);
-        if (win(r,c))
+        const int r = moves[i].r, c = moves[i].c;
+
+        makeMove(r, c, player);
+        double val;
+        if (checkWin(r, c))
         {
-            undo(r,c);
-            return player==BLACK?infscore:-infscore;
+            val = isMax ? (winScore + depth) : -(winScore + depth);
         }
-        int v=minmax(1-player,depth-1,-beta,-aplha,ply+1);
-        v=-v;
-        undo(r,c);
-        if (v>=beta) return beta;
-        if (v>aplha) aplha=v;
+        else
+        {
+            val = minmax(1 - player, depth - 1, alpha, beta, ply + 1);
+        }
+        undoMove(r, c);
+
+        if (timeUp)
+            return best;
+
+        if (isMax)
+        {
+            if (val > best)
+                best = val;
+            if (best > alpha)
+                alpha = best;
+        }
+        else
+        {
+            if (val < best)
+                best = val;
+            if (best < beta)
+                beta = best;
+        }
+
+        if (best >= winScore && isMax)
+            return best;
+        if (best <= -winScore && !isMax)
+            return best;
+
+        if (alpha >= beta)
+            break;
+
+        if ((nodes & 511) == 0 && elapsed() >= limitMs)
+        {
+            timeUp = true;
+            return best;
+        }
     }
-    return 0;
+    return best;
 }
-#endif //CCPP2026_MINMAX_H
+#endif

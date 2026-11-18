@@ -24,4 +24,5 @@ bool win(int r,int c)
     }
     return 0;
 }
-#endif //CCPP2026_WIN_H
+inline bool checkWin(int r, int c) { return win(r, c); }
+#endif

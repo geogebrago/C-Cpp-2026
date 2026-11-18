@@ -1,4 +1,3 @@
-﻿// EMPTY=-1, BLACK=0, WHITE=1
 #include<iostream>
 #include<Windows.h>
 #include "../../safe_input.h"
@@ -12,16 +11,16 @@
 #include "ai.h"
 #include "UI.h"
 using namespace std;
-int board[board_size][board_size],candidate_count[board_size][board_size],score[2];
+int board[boardSize][boardSize],nearCount[boardSize][boardSize];
+double score[2];
 int dr[4]={1,0,1,1},dc[4]={0,1,1,-1};
-double linecathe[4][board_size][board_size][2];
-int viscount;
-bool timeflag;
+double lineScore[4][boardSize][boardSize][2];
 int alivestone;
 int main()
 {
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
+    resetboard();
     while (1)
     {
         help();
@@ -35,7 +34,12 @@ int main()
             {
                 printf("请输入落子位置：");
                 string input;
-                cin>>input;
+                if (!safe_input(input))
+                {
+                    printf("已退出");
+                    exit(0);
+                }
+                input=trim(input);
                 if (input=="Q"||input=="q")
                 {
                     printf("已退出");
@@ -43,12 +47,26 @@ int main()
                 }
                 if (input=="U"||input=="u")
                 {
-                    if (!history.empty())
+                    int steps=0;
+                    while (steps<2&&!history.empty())
                     {
                         int r=history.back().first,c=history.back().second;
-                        undo(r,c);
                         history.pop_back();
-                        turn=1-turn;
+                        undo(r,c);
+                        ++steps;
+                    }
+                    if (steps==0) printf("没有可以悔的棋\n");
+                    turn=human;
+                    continue;
+                }
+                if (input=="H"||input=="h")
+                {
+                    vector<Move> tips=generateMoves();
+                    if (tips.empty()) printf("没有可下的点\n");
+                    else
+                    {
+                        orderMoves(tips,human);
+                        printf("建议落子：%d+%d\n",tips[0].r+1,tips[0].c+1);
                     }
                     continue;
                 }
@@ -78,6 +96,12 @@ int main()
                 print_board();
                 if (turn==human) printf("你赢了！\n");
                 else printf("AI 赢了！\n");
+                break;
+            }
+            if (alivestone>=boardSize*boardSize)
+            {
+                print_board();
+                printf("平局！\n");
                 break;
             }
             turn=1-turn;

@@ -1,81 +1,81 @@
-﻿//
-// Created by 26346 on 2026/11/11.
-//
-
 #ifndef CCPP2026_WAY_H
 #define CCPP2026_WAY_H
+#include <algorithm>
+#include <vector>
 #include "basic.h"
 #include "estimate.h"
-bool cp(const Move &a,const Move &b)
+
+bool moveCompare(const Move &a, const Move &b)
 {
-    return a.value>b.value;
+    return a.score > b.score;
 }
-vector<Move> generatemove()
+
+std::vector<Move> generateMoves()
 {
-    vector<Move>moves;
+    std::vector<Move> moves;
     if (alivestone==0)
     {
-        moves.push_back({board_size/2,board_size/2,0});
+        moves.push_back({boardSize/2,boardSize/2,0});
         return moves;
     }
-    for (int i=0;i<board_size;i++)
-        for (int j=0;j<board_size;j++)
-            if (candidate_count[i][j]>0&&board[i][j]==EMPTY)
+    for (int i=0;i<boardSize;i++)
+        for (int j=0;j<boardSize;j++)
+            if (nearCount[i][j]>0&&board[i][j]==EMPTY)
                 moves.push_back({i,j,0});
     if (moves.empty())
     {
-        for (int i=0;i<board_size;i++)
-            for (int j=0;j<board_size;j++)
+        for (int i=0;i<boardSize;i++)
+            for (int j=0;j<boardSize;j++)
                 if (board[i][j]==EMPTY)
                     moves.push_back({i,j,0});
     }
     return moves;
 }
-void ordermove(vector<Move>& moves,int player)
+
+int pointValue(int r, int c, int player)
 {
-    for (int i=0;i<moves.size();++i)
+    int value = 0;
+    for (int d=0; d<4; ++d)
     {
-        double v1=point_value(moves[i].r,moves[i].c,player);
-        double v2=point_value(moves[i].r,moves[i].c,player==BLACK?WHITE:BLACK)*DEFENSE;
-        moves[i].value=max(v1,v2);
+        int count = 1;
+        int open = 0;
+        for (int direction : {-1, 1})
+        {
+            for (int k=1; k<=4; ++k)
+            {
+                int nr = r + direction * k * dr[d];
+                int nc = c + direction * k * dc[d];
+                if (!in(nr,nc) || board[nr][nc] != player)
+                {
+                    if (in(nr,nc) && board[nr][nc] == EMPTY)
+                        ++open;
+                    break;
+                }
+                ++count;
+            }
+        }
+        value += patternscore(count, open);
     }
-    sort(moves.begin(),moves.end(),cp);
+    return value;
 }
-int point_value(int r,int c,int player)
+
+void orderMoves(std::vector<Move>& moves, int player)
 {
-    for (int d=0;d<4;++d)
+    int opponent = player == BLACK ? WHITE : BLACK;
+    for (Move& move : moves)
     {
-        int cnt=1,huo=0;
-        for (int k=1;k<=4;++k)
-        {
-            int nr=r+k*dr[d],nc=c+k*dc[d];
-            if (!in(nr,nc)||board[nr][nc]!=player)
-            {
-                if (in(nr,nc)&&board[nr][nc]==EMPTY) ++huo;
-                break;
-            }
-            cnt++;
-        }
-        for (int k=1;k<=4;++k)
-        {
-            int nr=r-k*dr[d],nc=c-k*dc[d];
-            if (!in(nr,nc)||board[nr][nc]!=player||cnt==5)
-            {
-                if (in(nr,nc)&&board[nr][nc]==EMPTY) ++huo;
-                break;
-            }
-            cnt++;
-        }
-        score[player == BLACK ? 0 : 1]+=patternscore(cnt,huo);
+        move.score = std::max(static_cast<double>(pointValue(move.r, move.c, player)),
+                              pointValue(move.r, move.c, opponent) * defense);
     }
-    return score[player == BLACK ? 0 : 1];
+    std::sort(moves.begin(), moves.end(), moveCompare);
 }
-int widthai(int ply)
+
+int widthAt(int ply)
 {
-    if (ply==1) return 14;
-    if (ply==2) return 12;
-    if (ply==3) return 10;
-    if (ply==4) return 8;
+    if (ply <= 1) return 14;
+    if (ply == 2) return 12;
+    if (ply == 3) return 10;
+    if (ply == 4) return 8;
     return 6;
 }
-#endif //CCPP2026_WAY_H
+#endif
